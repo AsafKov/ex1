@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include "../chessSystem.h"
-#include "../test_utilities.h"
+#include "../headers/chessSystem.h"
+#include "test_utilities.h"
 
 /*The number of tests*/
 #define NUMBER_TESTS 4

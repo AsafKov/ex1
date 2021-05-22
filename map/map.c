@@ -228,7 +228,7 @@ static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyE
     if(temp_key == NULL){
         return MAP_OUT_OF_MEMORY;
     }
-    MapDataElement  temp_data = map->copyDataFunction(data);
+    MapDataElement temp_data = map->copyDataFunction(data);
     if(temp_data == NULL){
         map->freeMapKeyFunction(temp_key);
         return MAP_OUT_OF_MEMORY;
