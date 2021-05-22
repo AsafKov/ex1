@@ -344,7 +344,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     ChessGame Game = createGame(game_id,first_player, second_player, winner, play_time);
     if(Game == NULL)
         return CHESS_OUT_OF_MEMORY;
-    MapResult map_result = mapPut((MapKeyElement)&tournament_id, Game);//adding Game to chessSystem chess
+    MapResult map_result = mapPut((*tournament)->games, (MapKeyElement)&game_id, Game);//adding Game to chessSystem chess
     return convertMapResultToChessResult(map_result);
 }
 
