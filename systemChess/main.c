@@ -53,6 +53,7 @@ static bool isPlayerInSystem(ChessSystem chess, int player_id);
 void chessDestroy(ChessSystem chess);
 static bool isValidID(int id);
 static bool isValidLocation(const char *location);
+ChessResult chessAddPlayers(ChessSystem chess, int player_id);
 static bool isValidMaxGame(int num);
 static bool isValidGameTime(int num);
 static bool isTournamentEnded(ChessSystem chess, int tournament_id);
@@ -60,6 +61,7 @@ static bool isGameExist(ChessSystem chess, ChessTournament *tournament, int firs
 static bool isMaxExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player);
 static bool isPlayerInSystem(ChessSystem chess, int player_id);
 ChessResult convertMapResultToChessResult(MapResult map_result);
+Player createPlayer(int id);
 ChessTournament createTournament(int tournament_id, int max_games_per_player, const char *tournament_location);
 ChessGame createGame(int game_id, int first_player, int second_player, Winner winner, int play_time);
 
@@ -67,31 +69,31 @@ MapDataElement copyMapDataTournament(MapDataElement data) {
     if (data == NULL) {
         return NULL;
     }
-    ChessTournament copy = createTournament((*(ChessTournament*)data)->tournament_id, (*(ChessTournament*)data)->max_games_per_player,(*(ChessTournament*)data)->tournament_location);
+    ChessTournament *current_tournament = (ChessTournament*)data;
+    ChessTournament *copy = malloc(sizeof(struct chess_tournament_t));
+    *copy = *current_tournament;
     if (copy == NULL) {
         return NULL;
     }
     Map games = (*(ChessTournament*)data)->games;
-    copy->games = mapCopy(games);
-    if (copy->games == NULL && games != NULL) {
-        free(copy);
-        return NULL;
+    if(games != NULL && mapGetSize(games) != 0) {
+        (*copy)->games = mapCopy(games);
+        if ((*copy)->games == NULL) {
+            free(copy);
+            return NULL;
+        }
     }
+
     Map players = (*(ChessTournament*)data)->players;
-    copy->players = mapCopy(players);
-    if (copy->players == NULL && players != NULL) {
-        mapDestroy(copy->games);
-        free(copy);
-        return NULL;
+    if(players != NULL && mapGetSize(players) != 0){
+        (*copy)->players = mapCopy(players);
+        if ((*copy)->players == NULL && players != NULL) {
+            mapDestroy((*copy)->games);
+            free(copy);
+            return NULL;
+        }
     }
-    copy->tournament_winner = (*(ChessTournament*)data)->tournament_winner;
-    copy->has_ended = (*(ChessTournament*)data)->has_ended;
-    copy->longest_game_time = (*(ChessTournament*)data)->longest_game_time;
-    copy->num_valid_time_games = (*(ChessTournament*)data)->num_valid_time_games;
-    copy->sum_valid_time_games = (*(ChessTournament*)data)->sum_valid_time_games;
-    copy->num_games = (*(ChessTournament*)data)->num_games;
-    copy->num_players = (*(ChessTournament*)data)->num_players;
-    return copy;
+    return (MapDataElement) copy;
 }
 
 void freeMapDataTournament(MapDataElement data){
@@ -104,7 +106,7 @@ void freeMapDataTournament(MapDataElement data){
     free(tournament);
 }
 
-MapDataElement copyMapKeyTournament(MapKeyElement key) {
+MapDataElement copyMapKey(MapKeyElement key) {
     if (key == NULL){
         return NULL;
     }
@@ -118,7 +120,7 @@ void freeMapKey(MapKeyElement key){
 }
 
 MapDataElement copyMapDataGame(MapDataElement data) {
-    ChessGame copy = (ChessGame) malloc(sizeof(*copy));
+    ChessGame copy = (ChessGame) malloc(sizeof(struct chess_game_t));
     if (data == NULL) {
         return NULL;
     }
@@ -130,16 +132,20 @@ MapDataElement copyMapDataGame(MapDataElement data) {
     return copy;
 }
 
-void freeMapDataGame(MapDataElement data){
+MapDataElement copyMapDataPlayer(MapDataElement data) {
+    Player *player_copy = malloc(sizeof(struct player));
+    *player_copy = *(Player*)data;
+    return player_copy;
+}
+
+void freeMapData(MapDataElement data){
     free(data);
 }
 
 int compareMapKeys(MapKeyElement key1, MapKeyElement key2){
+    if(key1 == NULL) return -1;
+    if(key2 == NULL) return 1;
     return *((int*)key1) - (*(int*)key2);
-}
-
-MapDataElement copyMapKeyGame(MapKeyElement key) {
-    return copyMapKeyTournament(key);
 }
 
 ChessSystem chessCreate() {
@@ -149,8 +155,10 @@ ChessSystem chessCreate() {
     Chess->num_games = 0;
     Chess->num_valid_time_games = 0;
     Chess->sum_valid_time_games = 0;
-    Chess->tournaments = NULL;
-    Chess->players = NULL;
+    Chess->tournaments = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament, freeMapKey,
+                                   compareMapKeys);
+    Chess->players = mapCreate(copyMapDataGame, copyMapKey, freeMapData, freeMapKey,
+                               compareMapKeys);
     return Chess;
 }
 
@@ -215,7 +223,7 @@ static bool isGameExist(ChessSystem chess, ChessTournament *tournament, int firs
     assert(tournament != NULL && chess != NULL);
     int *key = (int *) mapGetFirst((*tournament)->games);
     ChessGame *current_game = (ChessGame *) mapGet((*tournament)->games, (MapKeyElement) key);
-    while ((*current_game) != NULL) {
+    while (current_game != NULL) {
         if ((*current_game)->first_player == first_player && (*current_game)->second_player == second_player)
             return true;
         if ((*current_game)->first_player == second_player && (*current_game)->second_player == first_player)
@@ -274,8 +282,8 @@ ChessTournament createTournament(int tournament_id, int max_games_per_player, co
     Tournament->sum_valid_time_games = 0;
     Tournament->num_games = 0;
     Tournament->num_players = 0;
-    Tournament->games = NULL;
-    Tournament->players = NULL;
+    Tournament->games = mapCreate(copyMapDataGame, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
+    Tournament->players = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
     return Tournament;
 }
 
@@ -298,11 +306,11 @@ ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_gam
     }
 
     if(chess->tournaments == NULL){
-        chess->tournaments = mapCreate(copyMapDataTournament, copyMapKeyTournament, freeMapDataTournament,
+        chess->tournaments = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament,
                                        freeMapKey, compareMapKeys);
     }
     MapResult map_result = mapPut(chess->tournaments, (MapKeyElement) &tournament_id,
-                                  &tournament);//adding Tournament to chessSystem chess
+                                  (MapDataElement)&tournament);//adding Tournament to chessSystem chess
     return convertMapResultToChessResult(map_result);
 }
 
@@ -319,6 +327,8 @@ ChessGame createGame(int game_id, int first_player, int second_player, Winner wi
     return Game;
 }
 
+
+
 //TODO:what to do to game when player is removed?
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player, int second_player,
                          Winner winner, int play_time) {
@@ -331,7 +341,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         return CHESS_INVALID_ID;
     }
 
-    ChessTournament *tournament = (ChessTournament *) mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
+    ChessTournament *tournament = mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
     if (tournament == NULL) {
         return CHESS_TOURNAMENT_NOT_EXIST;
     }
@@ -344,18 +354,49 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     if (!isValidGameTime(play_time)) {
         return CHESS_INVALID_PLAY_TIME;
     }
+
+    chessAddPlayers(chess, first_player);
+    chessAddPlayers(chess, second_player);
     if (isMaxExceeded(chess, tournament_id, first_player, second_player)) {
         return CHESS_EXCEEDED_GAMES;
     }
-    int game_id;
-    if (!*tournament) {
-        game_id = (*tournament)->num_games + 1;
-    }
-    ChessGame Game = createGame(game_id, first_player, second_player, winner, play_time);
-    if (Game == NULL)
+
+    int game_id = (*tournament)->num_games + 1;
+
+    ChessGame game = createGame(game_id, first_player, second_player, winner, play_time);
+    if (game == NULL)
         return CHESS_OUT_OF_MEMORY;
     MapResult map_result = mapPut((*tournament)->games, (MapKeyElement) &game_id,
-                                  Game);//adding Game to chessSystem chess
+                                  (MapDataElement)&game);//adding Game to chessSystem chess
+    return convertMapResultToChessResult(map_result);
+}
+
+
+Player createPlayer(int id) {
+    Player player = (Player) malloc(sizeof(Player));
+    if (player == NULL)
+        return NULL;
+    player->id = id;
+    player->num_games =0;
+    player->num_wins=0;
+    player->num_draws=0;
+    player->num_losses=0;
+    player->has_been_removed=false;
+    return player;
+}
+
+ChessResult chessAddPlayers(ChessSystem chess, int player_id) {
+    if (chess == NULL) {
+        return CHESS_NULL_ARGUMENT;
+    }
+    if (!isValidID(player_id)){
+        return CHESS_INVALID_ID;
+    }
+    Player player = createPlayer(player_id);
+    if (player == NULL)
+        return CHESS_OUT_OF_MEMORY;
+    MapResult map_result = mapPut(chess->players, (MapKeyElement) &player_id,
+                                  (MapDataElement)&player);//adding Game to chessSystem chess
     return convertMapResultToChessResult(map_result);
 }
 
