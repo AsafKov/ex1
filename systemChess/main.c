@@ -47,41 +47,27 @@ typedef struct player {
 
 // Functions
 int comparePlayers(Player first, Player second);
-
 double calculatePlayerLevel(Player player);
-
 double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResult *chess_result);
-
 static bool isPlayerInSystem(ChessSystem chess, int player_id);
-
 void chessDestroy(ChessSystem chess);
-
 static bool isValidID(int id);
-
 static bool isValidLocation(const char *location);
 
 ChessResult chessAddPlayers(ChessSystem chess, ChessTournament tournament, int player_id);
 
 static bool isValidMaxGame(int num);
-
 static bool isValidGameTime(int num);
-
 static bool isTournamentEnded(ChessSystem chess, int tournament_id);
-
 static bool isGameExist(ChessSystem chess, ChessTournament *tournament, int first_player, int second_player);
-
 static bool isMaxExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player);
-
 static bool isPlayerInSystem(ChessSystem chess, int player_id);
-
 ChessResult convertMapResultToChessResult(MapResult map_result);
-
 Player createPlayer(int id);
 
 void updateScores(Map players, ChessGame match, int first_player, int second_player);
 
 ChessTournament createTournament(int tournament_id, int max_games_per_player, const char *tournament_location);
-
 ChessGame createGame(int game_id, int first_player, int second_player, Winner winner, int play_time);
 
 MapDataElement copyMapDataTournament(MapDataElement data) {
@@ -148,7 +134,8 @@ MapDataElement copyMapDataGame(MapDataElement data) {
     copy->second_player = ((ChessGame) data)->second_player;
     copy->game_winner = ((ChessGame) data)->game_winner;
     copy->play_time = ((ChessGame) data)->play_time;
-    return copy;
+    //chngr pointer
+    return (MapDataElement)&copy;
 }
 
 MapDataElement copyMapDataPlayer(MapDataElement data) {
@@ -293,7 +280,7 @@ ChessTournament createTournament(int tournament_id, int max_games_per_player, co
         return NULL;
     Tournament->tournament_id = tournament_id;
     Tournament->tournament_location = tournament_location;
-    Tournament->tournament_winner = -1;
+    Tournament->tournament_winner = DRAW;
     Tournament->max_games_per_player = max_games_per_player;
     Tournament->has_ended = false;
     Tournament->longest_game_time = -1;
@@ -324,8 +311,7 @@ chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_playe
     if (tournament == NULL) {
         return CHESS_OUT_OF_MEMORY;
     }
-
-    if (chess->tournaments == NULL) {
+    if(chess->tournaments == NULL){
         chess->tournaments = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament,
                                        freeMapKey, compareMapKeys);
     }
@@ -346,7 +332,6 @@ ChessGame createGame(int game_id, int first_player, int second_player, Winner wi
     Game->play_time = play_time;
     return Game;
 }
-
 
 //TODO:what to do to game when player is removed?
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player, int second_player,
@@ -395,6 +380,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     return result;
 }
 
+//change names
 void updateScores(Map players, ChessGame match, int first_player_id, int second_player_id) {
     Player *player1 = (Player *) mapGet(players, (MapKeyElement) &first_player_id);
     Player *player2 = (Player *) mapGet(players, (MapKeyElement) &second_player_id);
@@ -491,6 +477,7 @@ ChessResult chessEndTournament(ChessSystem chess, int tournament_id) {
     return CHESS_SUCCESS;
 }
 
+//TODO: TBD
 ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
     if (chess == NULL)
         return CHESS_NULL_ARGUMENT;
@@ -515,13 +502,51 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
     return CHESS_SUCCESS;
 }
 
-//TODO: TBD
+ChessResult chessRemovePlayerEffects(ChessSystem chess, Player *player) {
+    //assert(chess!=NULL);
+    int player_id = (*player)->id;
+    int *tournament_key = (int *) mapGetFirst(chess->tournaments);
+    ChessTournament *current_tournament = (ChessTournament*)mapGet(chess->tournaments, (MapKeyElement)tournament_key);
+    int *game_key = (int *) mapGetFirst(chess->tournaments);
+    ChessGame *current_game = (ChessGame*)mapGet((*current_tournament)->games, (MapKeyElement)game_key);
+    while (current_tournament != NULL) {
+        while (current_game != NULL && (*current_tournament)->has_ended == false) {
+            if((*current_game)->first_player == player_id){
+                int second_player_id= (*current_game)->second_player;
+                Player *second_player = (Player*)mapGet(chess->players, (MapKeyElement)&second_player_id);
+                if((*second_player)->has_been_removed== true){
+                    (*current_game)->game_winner = DRAW;
+                } else (*current_game)->game_winner = SECOND_PLAYER;
+            }
+            if((*current_game)->second_player == player_id){
+                int first_player_id= (*current_game)->first_player;
+                Player *first_player = (Player*)mapGet(chess->players, (MapKeyElement)&first_player_id);
+                if((*first_player)->has_been_removed== true){
+                    (*current_game)->game_winner = DRAW;
+                } else (*current_game)->game_winner = FIRST_PLAYER;
+            }
+            game_key = mapGetNext((*current_tournament)->games);
+            current_game = (ChessGame *)mapGet((*current_tournament)->games, (MapKeyElement)game_key);
+        }
+        tournament_key = mapGetNext(chess->tournaments);
+        current_tournament = (ChessTournament *) mapGet(chess->tournaments, (MapKeyElement) tournament_key);
+    }
+    return CHESS_SUCCESS;
+}
+
 //does not remove player from data, only flags player as removed
 ChessResult chessRemovePlayer(ChessSystem chess, int player_id) {
     if (chess == NULL)
         return CHESS_NULL_ARGUMENT;
+    if (!isValidID(player_id))
+        return CHESS_INVALID_ID;
     if (!isPlayerInSystem(chess, player_id))
         return CHESS_PLAYER_NOT_EXIST;
+    Player *player = (Player*)mapGet(chess->players, (MapKeyElement)&player_id);
+    if(player !=NULL){
+        (*player)->has_been_removed = true;
+        chessRemovePlayerEffects(chess,*player);
+    }
     return CHESS_SUCCESS;
 }
 
