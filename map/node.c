@@ -1,5 +1,5 @@
-#include "node.h"
-#include "map.h"
+#include "headers/node.h"
+#include "headers/map.h"
 #include <stdlib.h>
 
 struct node_t{

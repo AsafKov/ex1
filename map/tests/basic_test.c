@@ -1,6 +1,6 @@
-#include "./test_utilities.h"
+#include "test_utilities.h"
 #include <stdlib.h>
-#include "./map.h"
+#include "../headers/map.h"
 
 #define NUMBER_TESTS 4
 

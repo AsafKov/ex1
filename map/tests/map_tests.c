@@ -1,4 +1,4 @@
-#include "map.h"
+#include "../headers/map.h"
 #include "test_utilities.h"
 #include <stdlib.h>
 

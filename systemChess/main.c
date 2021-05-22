@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "chessSystem.h"
-#include "map.h"
+#include "headers/chessSystem.h"
+#include "../map/headers/map.h"
 
 typedef struct chess_system_t{
     Map tournaments;//key is tournament_id
@@ -413,7 +413,7 @@ int comparePlayers(Player first, Player second)
     if(calculatePlayerLevel(first) < calculatePlayerLevel(second))
         return -1;
 
-    //at this point both players levels are equal, and we order them by dictionary order of their IDs
+    //at this point both players levels are equal, and we order them by map order of their IDs
     if(first->id > second->id)
         return -1;
     if(first->id < second->id)
