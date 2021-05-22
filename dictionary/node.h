@@ -4,6 +4,4 @@
 
 typedef struct node_t *Node;
 
-Node createList();
-
 #endif //EX1_LINKEDLIST_H

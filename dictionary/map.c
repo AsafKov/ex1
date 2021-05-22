@@ -1,4 +1,3 @@
-#include "map.h"
 #include "node.c"
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,6 +7,7 @@
 static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement dataElement);
 MapResult addNewValues(Map map, MapKeyElement keyElement, MapDataElement dataElement);
 static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyElement key);
+static Node createList();
 
 struct Map_t {
     copyMapDataElements copyDataFunction;
@@ -236,6 +236,17 @@ static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyE
     node->key = temp_key;
     node->data = temp_data;
     return MAP_SUCCESS;
+}
+
+static Node createList(){
+    Node node = malloc(sizeof(*node));
+    if(node == NULL){
+        return NULL;
+    }
+    node->next = NULL;
+    node->data = NULL;
+    node->key = NULL;
+    return node;
 }
 
 /**

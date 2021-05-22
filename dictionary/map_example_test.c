@@ -1,376 +1,552 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-// MAKE SURE TO HAVE THESE FILES AS WELL AS map.c IN THE CURRENT FOLDER AND THAT YOUR COMPILE THE TESTER WITH YOUR map.c
-#include "test_utilities.h"
 #include "map.h"
+#include "test_utilities.h"
+#include <stdlib.h>
 
-MapDataElement copyDataString(MapDataElement element)
+#define NUMBER_TESTS 12
+
+static MapKeyElement copyKeyInt(MapKeyElement n);
+static MapDataElement copyDataChar(MapDataElement n);
+static void freeInt(MapKeyElement n);
+static void freeChar(MapDataElement n);
+static int compareInts(MapKeyElement n1, MapKeyElement n2);
+static bool testMapCreateDestroy();
+static bool testMapAddAndSize();
+static bool testMapGet();
+static bool testIterator();
+
+/** Function to be used for copying an int as a key to the map */
+static MapKeyElement copyKeyInt(MapKeyElement n)
 {
-    if (!element)
+    if (!n)
     {
         return NULL;
     }
-    char *new_string = malloc(strlen((char *)element) + 1);
-    if (!new_string)
+    int* copy = malloc(sizeof(*copy));
+    if (!copy)
     {
         return NULL;
     }
-    strcpy(new_string, (char *)element);
-    return new_string;
+    *copy = *(int*)n;
+    return copy;
 }
 
-void freeDataString(MapDataElement element)
+static MapKeyElement badCopyKeyInt(MapKeyElement n)
 {
-    free((char *)element);
+    (void)n;
+    return NULL;
 }
 
-MapKeyElement copyKeyString(MapKeyElement element)
+/** Function to be used for copying a char as a data to the map */
+static MapDataElement copyDataChar(MapDataElement n)
 {
-    if (!element)
+    if (!n)
     {
         return NULL;
     }
-    //printf("element ---%s---\n", (char*)element);
-    char *new_string = malloc(strlen((char *)element) + 1);
-    if (!new_string)
+    char* copy = malloc(sizeof(*copy));
+    if (!copy)
     {
         return NULL;
     }
-    strcpy(new_string, (char *)element);
-    return new_string;
+    *copy = *(char*)n;
+    return (MapDataElement)copy;
 }
 
-void freeKeyString(MapKeyElement element)
+static MapDataElement badCopyDataChar(MapDataElement n)
 {
-
-    free((char *)element);
+    (void)n;
+    return NULL;
 }
 
-int compareKeyStrings(MapKeyElement element1, MapKeyElement element2)
+/** Function to be used by the map for freeing elements */
+static void freeInt(MapKeyElement n)
 {
-
-    return strcmp((char *)element1, (char *)element2);
+    free(n);
 }
 
-bool testMapCreate()
+/** Function to be used by the map for freeing elements */
+static void freeChar(MapDataElement n)
 {
-    printf(">Testing mapCreate:\n");
-    Map map1 = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    Map map2 = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    Map map3 = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    mapDestroy(map3);
-    ASSERT_TEST(map1 != NULL);
-    ASSERT_TEST(map2 != NULL);
-    ASSERT_TEST(mapGetSize(map1) == 0);
-    ASSERT_TEST(mapGetFirst(map1) == NULL);
-    mapPut(map1, "mary", "poppins");
-    mapDestroy(map1);
-    map1 = NULL;
-    mapDestroy(map1);
-    ASSERT_TEST(mapGet(map1, "mary") == NULL);
-    ASSERT_TEST(mapGetSize(map1) == -1);
-    ASSERT_TEST(map2 != NULL);
-    mapDestroy(map2);
-    return true;
+    free(n);
 }
 
-bool testMapPutGet()
+/** Function to be used by the map for comparing elements */
+static int compareInts(MapKeyElement n1, MapKeyElement n2)
 {
-    printf(">Testing mapPut, mapGet and mapGetSize:\n");
-    Map map = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
+    int x = *(int*)n1;
+    int y = *(int*)n2;
+    return x - y;
+}
 
-    //const char *key1 = "key1";
-    //const char *key2 = "key2";
-    //const char *key3 = "key3";
+bool testMapCreateDestroy()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
 
-    int count = 0;
+    ASSERT_TEST(map != NULL);
+    ASSERT_TEST(mapGetSize(map) == 0);
+    ASSERT_TEST(mapGetFirst(map) == NULL);
 
-    printf(">>Verify putting keys...\n");
-    ASSERT_TEST(mapPut(map, "key1", "value1") == MAP_SUCCESS);
-    //printf("--- %s ---\n", (char*)mapGet(map, &key1));
-    count++;
-    ASSERT_TEST(mapPut(map, "key2", "value2") == MAP_SUCCESS);
-    count++;
-    ASSERT_TEST(mapPut(map, "key3", "value3") == MAP_SUCCESS);
-    count++;
-
-    printf(">>Verify sizes change correctly...\n");
-    ASSERT_TEST(mapGetSize(map) == count);
-    ASSERT_TEST(mapPut(map, "key3", "value4") == MAP_SUCCESS);
-    //printf("--- %s ---\n", (char*)mapGet(map, &key3));
-    ASSERT_TEST(mapGetSize(map) == count);
-    ASSERT_TEST(mapRemove(map, "key2") == MAP_SUCCESS);
-    count--;
-    ASSERT_TEST(mapGetSize(map) == count);
-    ASSERT_TEST(mapRemove(map, "key1") == MAP_SUCCESS);
-    count--;
-    ASSERT_TEST(mapRemove(map, "key3") == MAP_SUCCESS);
-    count--;
-    ASSERT_TEST(mapPut(map, "key3", "value1") == MAP_SUCCESS);
-    count++;
-
-    printf(">>Verify `PUT` with NULL arguments...\n");
-    ASSERT_TEST(mapPut(map, "key3", NULL) == MAP_NULL_ARGUMENT);
-    ASSERT_TEST(mapPut(map, NULL, "value3") == MAP_NULL_ARGUMENT);
-    ASSERT_TEST(mapPut(map, NULL, NULL) == MAP_NULL_ARGUMENT);
-    ASSERT_TEST(mapPut(NULL, "key3", "value3") == MAP_NULL_ARGUMENT);
-    ASSERT_TEST(mapPut(NULL, NULL, NULL) == MAP_NULL_ARGUMENT);
-    ASSERT_TEST(mapGetSize(map) == count);
-
-    printf(">>Make sure added key has the correct value...\n");
-    ASSERT_TEST(mapPut(map, "key1", "value2") == MAP_SUCCESS);
-    count++;
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), "value2") == 0);
-    printf(">>Verify value of key changed...\n");
-    ASSERT_TEST(mapPut(map, "key1", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), "value1") == 0);
-    ASSERT_TEST(mapRemove(map, "key1") == MAP_SUCCESS);
-    count--;
-    printf(">>Verify key doesn't exist...\n");
-    ASSERT_TEST(mapGet(map, "key1") == NULL);
-
-    printf(">>Verify string value is duplicated on PUT...\n");
-    //const char *value1 = "value1";
-    ASSERT_TEST(mapPut(map, "key1", "value1") == MAP_SUCCESS);
-    count++;
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), "value1") == 0); //TODO
-    //ASSERT_TEST(mapGet(map, "key1") != "value1");
-    ASSERT_TEST(mapGetSize(map) == count);
-
-    printf(">>Verify string isn't duplicated on GET...\n");
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), mapGet(map, "key1")) == 0);
-    //ASSERT_TEST(mapGet(map, "key1") == mapGet(map, "key1"));
-
-    printf(">>Verify override lookup by value and not by address...\n");
-    ASSERT_TEST(mapPut(map, "key1", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(mapGetSize(map) == count);
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), "value1") == 0);
-
-    printf(">>Testing empty strings...\n");
-    ASSERT_TEST(mapPut(map, "key1", "") == MAP_SUCCESS);
-    ASSERT_TEST(mapPut(map, "key2", "") == MAP_SUCCESS);
-    count++;
-    ASSERT_TEST(mapGetSize(map) == count);
-    ASSERT_TEST(mapPut(map, "", "value1") == MAP_SUCCESS);
-    count++;
-    ASSERT_TEST(mapGetSize(map) == count);
-    ASSERT_TEST(strcmp(mapGet(map, ""), "value1") == 0);
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), "") == 0);
-
-    printf(">>Test a super long string...\n");
-    char *super_long_string =
-            "Hi— I’m Ted Mosby. And exactly 45 days from now you and I are "
-            "going to meet and we’re going to fall in love and we’re going to "
-            "get married and we’re going to have 2 kids and we’re going to "
-            "love them and each other so much. All that is 45 days away, but "
-            "I’m here now I guess because… I want those extra 45 days with "
-            "you. I want each one of them. Look and if I can’t have them I’ll "
-            "take the 45 seconds before your boyfriend shows up and punches me "
-            "in the face, because… I love you. I’m always gonna love you, til "
-            "the end of my days and beyond. You’ll see.Hi— I’m Ted Mosby. And "
-            "exactly 45 days from now you and I are "
-            "going to meet and we’re going to fall in love and we’re going to "
-            "get married and we’re going to have 2 kids and we’re going to "
-            "love them and each other so much. All that is 45 days away, but "
-            "I’m here now I guess because… I want those extra 45 days with "
-            "you. I want each one of them. Look and if I can’t have them I’ll "
-            "take the 45 seconds before your boyfriend shows up and punches me "
-            "in the face, because… I love you. I’m always gonna love you, til "
-            "the end of my days and beyond. You’ll see.Hi— I’m Ted Mosby. And "
-            "exactly 45 days from now you and I are "
-            "going to meet and we’re going to fall in love and we’re going to "
-            "get married and we’re going to have 2 kids and we’re going to "
-            "love them and each other so much. All that is 45 days away, but "
-            "I’m here now I guess because… I want those extra 45 days with "
-            "you. I want each one of them. Look and if I can’t have them I’ll "
-            "take the 45 seconds before your boyfriend shows up and punches me "
-            "in the face, because… I love you. I’m always gonna love you, til "
-            "the end of my days and beyond. You’ll see.Hi— I’m Ted Mosby. And "
-            "exactly 45 days from now you and I are "
-            "going to meet and we’re going to fall in love and we’re going to "
-            "get married and we’re going to have 2 kids and we’re going to "
-            "love them and each other so much. All that is 45 days away, but "
-            "I’m here now I guess because… I want those extra 45 days with "
-            "you. I want each one of them. Look and if I can’t have them I’ll "
-            "take the 45 seconds before your boyfriend shows up and punches me "
-            "in the face, because… I love you. I’m always gonna love you, til "
-            "the end of my days and beyond. You’ll see.Hi— I’m Ted Mosby. And "
-            "exactly 45 days from now you and I are "
-            "going to meet and we’re going to fall in love and we’re going to "
-            "get married and we’re going to have 2 kids and we’re going to "
-            "love them and each other so much. All that is 45 days away, but "
-            "I’m here now I guess because… I want those extra 45 days with "
-            "you. I want each one of them. Look and if I can’t have them I’ll "
-            "take the 45 seconds before your boyfriend shows up and punches me "
-            "in the face, because… I love you. I’m always gonna love you, til "
-            "the end of my days and beyond. You’ll see.";
-    ASSERT_TEST(mapPut(map, "key1", super_long_string) == MAP_SUCCESS);
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), super_long_string) == 0);
-    ASSERT_TEST(mapPut(map, &super_long_string, "value1") == MAP_SUCCESS);
-    ASSERT_TEST(strcmp(mapGet(map, &super_long_string), "value1") == 0);
-    count++;
-    ASSERT_TEST(strcmp(mapGet(map, &super_long_string), "value1") == 0);
-    ASSERT_TEST(mapGetSize(map) == count);
-    ASSERT_TEST(strcmp(mapGet(map, "key2"), "") == 0);
     mapDestroy(map);
-    printf(
-            ">>Destroy the list without removing all the keys. To let valgrind catch "
-            "de-allocation errors...\n");
+
     return true;
 }
 
-bool testMapCopy()
+bool testMapAddAndSize()
 {
-    printf(">Test mapCopy function:\n");
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 1; key < 1000; ++key)
+    {
+        char val = (char)key;
+        ++val;
+
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+        ASSERT_TEST(mapGetSize(map) == key);
+    }
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool testNoMemory()
+{
+    Map map = mapCreate(copyDataChar, badCopyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 1; key < 100; ++key)
+    {
+        char val = (char)key;
+        ++val;
+
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_OUT_OF_MEMORY);
+        ASSERT_TEST(mapGetSize(map) == 0);
+    }
+
+    mapDestroy(map);
+
+    map = mapCreate(badCopyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 1; key < 100; ++key)
+    {
+        char val = (char)key;
+        ++val;
+
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_OUT_OF_MEMORY);
+        ASSERT_TEST(mapGetSize(map) == 0);
+    }
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool testMapGet()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 1; key < 1000; ++key)
+    {
+        char val = (char)key;
+        ++val;
+
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+        ASSERT_TEST(mapGetSize(map) == key);
+    }
+
+    for (int i = 1; i < 1000; ++i)
+    {
+        char j = (char)i;
+        ++j;
+        char* getVal = (char*)mapGet(map, &i);
+        ASSERT_TEST(*getVal == j);
+    }
+
+    int i = 0;
+    ASSERT_TEST(mapGet(map, &i) == NULL);
+
+    i = 1000;
+    ASSERT_TEST(mapGet(map, &i) == NULL);
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool testIterator()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 1; key < 400; ++key)
+    {
+        char val = (char)key;
+        ++val;
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    for (int key = 800; key >= 400; --key)
+    {
+        char val = (char)key;
+        ++val;
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    for (int key = 801; key < 1000; ++key)
+    {
+        char val = (char)key;
+        ++val;
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    int i = 1;
+    MAP_FOREACH(int*, iter, map)
+    {
+        ASSERT_TEST(*iter == i);
+        i++;
+        freeInt(iter);
+    }
+
+    i = 1;
+    MAP_FOREACH(int*, iter, map)
+    {
+        ASSERT_TEST(*iter == i);
+        i++;
+        freeInt(iter);
+    }
+
+    mapDestroy(map);
+    return true;
+}
+
+bool testDuplicates()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 0; key < 400; key++)
+    {
+        char val = (char)key;
+        ++val;
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    for (int key = 399; key >= 0; key--)
+    {
+        char val = (char)key;
+        ++val;
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 400);
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool testElemVals()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 0; key < 400; key++)
+    {
+        char val = (char)(key + 1);
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 400);
+
+    int i = 0;
+    MAP_FOREACH(int*, iter, map)
+    {
+        ASSERT_TEST(*(char*)mapGet(map, iter) == (char)(i + 1));
+        i++;
+        freeInt(iter);
+    }
+
+    for (int key = 0; key < 400; key++)
+    {
+        char val = (char)key;
+        val += 10;
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 400);
+
+    i = 0;
+    MAP_FOREACH(int*, iter, map)
+    {
+        ASSERT_TEST(*(char*)mapGet(map, iter) == (char)(i + 10));
+        i++;
+        freeInt(iter);
+    }
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool testRemove()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 0; key < 400; key++)
+    {
+        char val = (char)(key + 1);
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 400);
+
+    for (int key = 0; key < 200; key++)
+    {
+        ASSERT_TEST(mapRemove(map, &key) == MAP_SUCCESS);
+    }
+
+    for (int key = 0; key < 200; key++)
+    {
+        ASSERT_TEST(mapRemove(map, &key) == MAP_ITEM_DOES_NOT_EXIST);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 200);
+
+    int i = 200;
+    MAP_FOREACH(int*, iter, map)
+    {
+        ASSERT_TEST(*(char*)mapGet(map, iter) == (char)(i + 1));
+        i++;
+        freeInt(iter);
+    }
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool testClear()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    ASSERT_TEST(mapGetSize(map) == 0);
+
+    for (int key = 0; key < 400; key++)
+    {
+        char val = (char)(key + 1);
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 400);
+
+    MAP_FOREACH(int*, iter, map)
+    {
+        freeInt(iter);
+    }
+
+    mapClear(map);
+
+    ASSERT_TEST(mapGetSize(map) == 0);
+
+    for (int key = 0; key < 300; key++)
+    {
+        char val = (char)(key + 1);
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 300);
+
+    int i = 0;
+    MAP_FOREACH(int*, iter, map)
+    {
+        ASSERT_TEST(*(char*)mapGet(map, iter) == (char)(i + 1));
+        i++;
+        freeInt(iter);
+    }
+
+    mapClear(map);
+
+    ASSERT_TEST(mapGetSize(map) == 0);
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool testCopy()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 0; key < 400; key++)
+    {
+        char val = (char)(key + 1);
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 400);
+
+    Map copy = mapCopy(map);
+
+    ASSERT_TEST(copy != NULL);
+
+    ASSERT_TEST(mapGetSize(copy) == 400);
+
+    mapDestroy(map);
+
+    int i = 0;
+    MAP_FOREACH(int*, iter, copy)
+    {
+        ASSERT_TEST(*(char*)mapGet(copy, iter) == (char)(i + 1));
+        i++;
+        freeInt(iter);
+    }
+
+    Map copy2 = mapCopy(copy);
+
+    ASSERT_TEST(copy2 != NULL);
+
+    ASSERT_TEST(mapGetSize(copy2) == 400);
+
+    mapDestroy(copy2);
+
+    i = 0;
+    MAP_FOREACH(int*, iter, copy)
+    {
+        ASSERT_TEST(*(char*)mapGet(copy, iter) == (char)(i + 1));
+        i++;
+        freeInt(iter);
+    }
+
+    mapDestroy(copy);
+
+    return true;
+}
+
+bool testContains()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    for (int key = 0; key < 400; key++)
+    {
+        char val = (char)(key + 1);
+        ASSERT_TEST(mapPut(map, &key, &val) == MAP_SUCCESS);
+    }
+
+    ASSERT_TEST(mapGetSize(map) == 400);
+
+    for (int i = 0; i < 400; i++)
+    {
+        ASSERT_TEST(mapContains(map, &i) == true);
+    }
+
+    for (int i = 500; i < 600; i++)
+    {
+        ASSERT_TEST(mapContains(map, &i) == false);
+    }
+
+    mapDestroy(map);
+
+    return true;
+}
+
+bool nullTests()
+{
+    Map map = mapCreate(copyDataChar, copyKeyInt, freeChar, freeInt, compareInts);
+
+    int val = 1;
+
     ASSERT_TEST(mapCopy(NULL) == NULL);
-    Map map1 = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    ;
-    ASSERT_TEST(mapPut(map1, "key1", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(mapPut(map1, "key2", "value2") == MAP_SUCCESS);
-    Map map2 = mapCopy(map1);
-    ASSERT_TEST(strcmp(mapGet(map2, "key1"), mapGet(map1, "key1")) == 0);
-    ASSERT_TEST(strcmp(mapGet(map2, "key2"), mapGet(map1, "key2")) == 0);
 
-    printf(">>Verify size are the same...\n");
-    ASSERT_TEST(mapGetSize(map2) == mapGetSize(map1));
-
-    printf(">>Verify mapCopy duplicated the strings...\n");
-    ASSERT_TEST(mapGet(map2, "key2") != mapGet(map1, "key2"));
-    ASSERT_TEST(mapRemove(map1, "key1") == MAP_SUCCESS);
-
-    // Try re-allocating the same memory so it will change
-    ASSERT_TEST(mapPut(map1, "key4", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(mapPut(map1, "key5", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(mapPut(map1, "key6", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(mapPut(map1, "key7", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(mapGet(map2, "key2") != NULL);
-
-    mapDestroy(map1);
-    ASSERT_TEST(strcmp(mapGet(map2, "key1"), "value1") == 0);
-    ASSERT_TEST(strcmp(mapGet(map2, "key2"), "value2") == 0);
-    mapDestroy(map2);
-    return true;
-}
-
-bool testMapGetSize()
-{
-    printf(">Test mapGetSize function:\n");
-    Map map = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-
-    ASSERT_TEST(mapGetSize(map) == 0);
-    ASSERT_TEST(mapPut(map, "key1", "value1") == MAP_SUCCESS);
-    ASSERT_TEST(mapPut(map, "key1", "value2") == MAP_SUCCESS);
-    ASSERT_TEST(mapGetSize(map) == 1);
-    ASSERT_TEST(mapRemove(map, "key1") == MAP_SUCCESS);
-    ASSERT_TEST(mapGetSize(map) == 0);
     ASSERT_TEST(mapGetSize(NULL) == -1);
+
+    ASSERT_TEST(mapGetSize(map) == 0);
+
+    ASSERT_TEST(mapContains(NULL, &val) == false);
+
+    ASSERT_TEST(mapContains(map, NULL) == false);
+
+    ASSERT_TEST(mapPut(NULL, &val, &val) == MAP_NULL_ARGUMENT);
+
+    ASSERT_TEST(mapPut(map, NULL, &val) == MAP_NULL_ARGUMENT);
+
+    ASSERT_TEST(mapPut(map, &val, NULL) == MAP_NULL_ARGUMENT);
+
+    ASSERT_TEST(mapGet(NULL, &val) == NULL);
+
+    ASSERT_TEST(mapGet(map, NULL) == NULL);
+
+    ASSERT_TEST(mapRemove(NULL, &val) == MAP_NULL_ARGUMENT);
+
+    ASSERT_TEST(mapRemove(map, NULL) == MAP_NULL_ARGUMENT);
+
+    ASSERT_TEST(mapGetFirst(NULL) == NULL);
+
+    ASSERT_TEST(mapGetFirst(map) == NULL);
+
+    ASSERT_TEST(mapGetNext(NULL) == NULL);
+
+    ASSERT_TEST(mapGetNext(map) == NULL);
+
+    ASSERT_TEST(mapClear(NULL) == MAP_NULL_ARGUMENT);
+
     mapDestroy(map);
+
     return true;
 }
 
-bool testMapContains()
-{
-    Map map1 = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    ;
-    mapPut(map1, "key1", "value1");
-    ASSERT_TEST(mapContains(map1, "key1") == true);
-    ASSERT_TEST(mapContains(NULL, "key1") == false);
-    ASSERT_TEST(mapContains(map1, NULL) == false);
-    ASSERT_TEST(mapContains(map1, "dani") == false);
-    mapDestroy(map1);
-    return true;
-}
+/*The functions for the tests should be added here*/
+bool (*tests[])(void) =
+        {
+                testMapCreateDestroy,
+                testNoMemory,
+                testMapAddAndSize,
+                testMapGet,
+                testIterator,
+                testDuplicates,
+                testElemVals,
+                testRemove,
+                testClear,
+                testCopy,
+                testContains,
+                nullTests,
+        };
 
-bool testMapRemove()
-{
-    Map map1 = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    ;
-    mapPut(map1, "key1", "value1");
-    mapPut(map1, "key2", "value2");
-    mapPut(map1, "key3", "value3");
-    mapRemove(map1, "key1");
-    ASSERT_TEST(mapContains(map1, "key1") == false);
-    ASSERT_TEST(mapGetSize(map1) == 2);
-    mapPut(map1, "key1", "value1");
-    mapRemove(map1, "key3");
-    ASSERT_TEST(mapContains(map1, "key3") == false);
-    ASSERT_TEST(mapGetSize(map1) == 2);
-    mapPut(map1, "key3", "value3");
-    mapRemove(map1, "key3");
-    ASSERT_TEST(mapContains(map1, "key3") == false);
-    ASSERT_TEST(mapGetSize(map1) == 2);
-    mapDestroy(map1);
-    return true;
-}
+/*The names of the test functions should be added here*/
+const char* testNames[] =
+        {
+                "testMapCreateDestroy",
+                "testNoMemory",
+                "testMapAddAndSize",
+                "testMapGet",
+                "testIterator",
+                "testDuplicates",
+                "testElemVals",
+                "testRemove",
+                "testClear",
+                "testCopy",
+                "testContains",
+                "nullTests",
+        };
 
-char *randString(int length)
+int main(int argc, char* argv[])
 {
-    char *string =
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
-    size_t string_len = strlen(string);
-    char *random_string = NULL;
-
-    if (length < 1)
+    if (argc == 1)
     {
-        length = 1;
+        for (int test_idx = 0; test_idx < NUMBER_TESTS; test_idx++)
+        {
+            RUN_TEST(tests[test_idx], testNames[test_idx]);
+        }
+        return 0;
     }
-    random_string = malloc(sizeof(char) * (length + 1));
-    if (random_string == NULL)
+    if (argc != 2)
     {
-        return NULL;
-    }
-    short key = 0;
-    for (int n = 0; n < length; n++)
-    {
-        key = rand() % string_len;
-        random_string[n] = string[key];
+        fprintf(stdout, "Usage: <your_executable_file_name> <test index>\n");
+        return 0;
     }
 
-    random_string[length] = '\0';
-
-    return random_string;
-}
-
-bool doomsDay()
-{
-    printf(">doomsDay function:\n");
-    Map map = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    ;
-    const int repeat = 10000;
-    const int length = 7;
-    char *arr[repeat];
-    static int my_seed = 25011984;
-    srand(time(NULL) * length + ++my_seed);
-    char *str;
-    for (int i = 0; i < repeat; i++)
+    int test_idx = strtol(argv[1], NULL, 10);
+    if (test_idx < 1 || test_idx > NUMBER_TESTS)
     {
-        str = randString(length);
-        arr[i] = str;
-        ASSERT_TEST(mapPut(map, str, str) == MAP_SUCCESS);
+        fprintf(stderr, "Invalid test index %d\n", test_idx);
+        return 0;
     }
-    ASSERT_TEST(mapGetSize(map) == repeat);
-    for (int i = 1; i <= repeat; i++)
-    {
-        ASSERT_TEST(strcmp(mapGet(map, arr[repeat - i]), arr[repeat - i]) == 0);
-        ASSERT_TEST(mapRemove(map, arr[repeat - i]) == MAP_SUCCESS);
-        free(arr[repeat - i]);
-    }
-    mapDestroy(map);
-    return true;
-}
 
-int main(int argc, char *argv[])
-{
-    printf("Start Map Tests:\n");
-    testMapPutGet();
-    testMapCopy();
-    testMapGetSize();
-    testMapCreate();
-    testMapContains();
-    testMapRemove();
-    doomsDay();
-    printf("end Map Tests.\n");
+    RUN_TEST(tests[test_idx - 1], testNames[test_idx - 1]);
     return 0;
 }
