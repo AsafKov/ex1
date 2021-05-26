@@ -124,17 +124,12 @@ MapDataElement copyMapDataTournament(MapDataElement data) {
     return (MapDataElement) copy;
 }
 MapDataElement copyMapDataGame(MapDataElement data) {
-    ChessGame copy = (ChessGame) malloc(sizeof(struct chess_game_t));
-    if (data == NULL) {
+    ChessGame *copy = malloc(sizeof(struct chess_game_t));
+    if (copy == NULL) {
         return NULL;
     }
-    copy->game_id = ((ChessGame) data)->game_id;
-    copy->first_player = ((ChessGame) data)->first_player;
-    copy->second_player = ((ChessGame) data)->second_player;
-    copy->game_winner = ((ChessGame) data)->game_winner;
-    copy->play_time = ((ChessGame) data)->play_time;
-    //chngr pointer
-    return (MapDataElement)&copy;
+    *copy = *(ChessGame *)data;
+    return copy;
 }
 MapDataElement copyMapDataPlayer(MapDataElement data) {
     Player *player_copy = malloc(sizeof(struct player));
@@ -368,7 +363,6 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     return result;
 }
 
-//TODO: TBD
 ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
     if (chess == NULL)
         return CHESS_NULL_ARGUMENT;
@@ -389,7 +383,7 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
         tournament_profile = mapGet((*tournament)->players, (MapKeyElement*)player_id);
         system_profile = mapGet(chess->players, (MapKeyElement*)player_id);
     }
-    freeMapDataTournament(mapGet(chess->tournaments, (MapKeyElement)&tournament_id));
+    mapRemove(chess->tournaments, (MapKeyElement)&tournament_id);
     return CHESS_SUCCESS;
 }
 
@@ -434,9 +428,10 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id) {
     if (!isPlayerInSystem(chess, player_id))
         return CHESS_PLAYER_NOT_EXIST;
     Player *player = (Player*)mapGet(chess->players, (MapKeyElement)&player_id);
+    ChessResult result = CHESS_SUCCESS;
     if(player !=NULL){
         (*player)->has_been_removed = true;
-        chessRemovePlayerEffects(chess,*player);
+        result = chessRemovePlayerEffects(chess, player);
     }
     return CHESS_SUCCESS;
 }

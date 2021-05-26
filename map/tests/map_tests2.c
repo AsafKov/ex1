@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "../headers/node.h"
 // MAKE SURE TO HAVE THESE FILES AS WELL AS map.c IN THE CURRENT FOLDER AND THAT YOUR COMPILE THE TESTER WITH YOUR map.c
 #include "test_utilities.h"
-#include "../headers/map.h"
 
 MapDataElement copyDataString(MapDataElement element)
 {
@@ -95,6 +95,7 @@ bool testMapPutGet()
     count++;
     ASSERT_TEST(mapPut(map, "key3", "value3") == MAP_SUCCESS);
     count++;
+    printf("%c", *(char*)mapGet(map, "key3"));
 
     printf(">>Verify sizes change correctly...\n");
     ASSERT_TEST(mapGetSize(map) == count);
@@ -286,7 +287,6 @@ bool testMapContains()
 bool testMapRemove()
 {
     Map map1 = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    ;
     mapPut(map1, "key1", "value1");
     mapPut(map1, "key2", "value2");
     mapPut(map1, "key3", "value3");

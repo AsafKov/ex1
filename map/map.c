@@ -1,4 +1,4 @@
-#include "node.c"
+#include "headers\node.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -7,7 +7,6 @@
 static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement dataElement);
 MapResult addNewValues(Map map, MapKeyElement keyElement, MapDataElement dataElement);
 static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyElement key);
-static Node createList();
 
 struct Map_t {
     copyMapDataElements copyDataFunction;
@@ -57,10 +56,10 @@ MapResult mapClear(Map map){
     map->pointer = NULL;
     Node dummy;
     while(map->elements != NULL){
-        map->freeMapKeyFunction(map->elements->key);
-        map->freeMapDataFunction(map->elements->data);
+        map->freeMapKeyFunction(getKey(map->elements));
+        map->freeMapDataFunction(getData((map->elements)));
         dummy = map->elements;
-        map->elements = dummy->next;
+        map->elements = getNext(dummy);
         free(dummy);
     }
     map->size = 0;
@@ -76,17 +75,17 @@ MapResult mapRemove(Map map, MapKeyElement keyElement){
     }
     Node dummy = map->elements;
     Node prev_node = NULL;
-    while(map->compareMapKeyFunction(dummy->key, keyElement) != 0){
+    while(map->compareMapKeyFunction(getKey(dummy), keyElement) != 0){
         prev_node = dummy;
-        dummy = dummy->next;
+        dummy = getNext(dummy);
     }
     if(prev_node != NULL){
-        prev_node->next = dummy->next;
+        setNext(prev_node, getNext(dummy));
     } else {
-        map->elements = dummy->next;
+        map->elements = getNext(dummy);
     }
-    map->freeMapKeyFunction(dummy->key);
-    map->freeMapDataFunction(dummy->data);
+    map->freeMapKeyFunction(getKey(dummy));
+    map->freeMapDataFunction(getData(dummy));
     free(dummy);
     map->size--;
     return MAP_SUCCESS;
@@ -103,7 +102,7 @@ Map mapCopy(Map map){
         return NULL;
     }
 
-    map_copy->elements = createList();
+    map_copy->elements = createEmptyNode();
     if(map_copy->elements == NULL){
         free(map_copy);
         return NULL;
@@ -114,21 +113,21 @@ Map mapCopy(Map map){
     Node copy_dummy = map_copy->elements;
     Node original_dummy = map->elements;
     for(int i=1; i<map->size; i++){
-        copy_dummy->next = createList();
-        if(copy_dummy == NULL){
+        setNext(copy_dummy, createEmptyNode());
+        if(getNext(copy_dummy) == NULL){
             mapDestroy(map_copy);
             return NULL;
         }
-        copy_dummy = copy_dummy->next;
+        copy_dummy = getNext(copy_dummy);
     }
     copy_dummy = map_copy->elements;
     for(int i=0; i<map->size; i++){
-        if(initializeNode(map, copy_dummy, original_dummy->data, original_dummy->key) != MAP_SUCCESS){
+        if(initializeNode(map, copy_dummy, getData(original_dummy), getKey(original_dummy)) != MAP_SUCCESS){
             mapDestroy(map_copy);
             return NULL;
         }
-        copy_dummy = copy_dummy->next;
-        original_dummy = original_dummy->next;
+        copy_dummy = getNext(copy_dummy);
+        original_dummy = getNext(original_dummy);
     }
     map_copy->size = map->size;
 
@@ -151,10 +150,10 @@ bool mapContains(Map map, MapKeyElement element){
         return false;
     }
 
-    int compareResult = map->compareMapKeyFunction(dummy->key, element);
-    while(dummy->next != NULL && compareResult < 0){
-        dummy = dummy->next;
-        compareResult = map->compareMapKeyFunction(dummy->key, element);
+    int compareResult = map->compareMapKeyFunction(getKey(dummy), element);
+    while(getNext(dummy) != NULL && compareResult < 0){
+        dummy = getNext(dummy);
+        compareResult = map->compareMapKeyFunction(getKey(dummy), element);
     }
     return compareResult == 0;
 }
@@ -182,7 +181,7 @@ MapResult mapPut(Map map, MapKeyElement keyElement, MapDataElement dataElement){
 MapResult addNewValues(Map map, MapKeyElement keyElement, MapDataElement dataElement){
     MapResult result;
     if(map->elements == NULL){
-        map->elements = createList();
+        map->elements = createEmptyNode();
         result = initializeNode(map, map->elements, dataElement, keyElement);
         if(result == MAP_SUCCESS){
             map->size++;
@@ -194,26 +193,26 @@ MapResult addNewValues(Map map, MapKeyElement keyElement, MapDataElement dataEle
     }
     Node dummy = map->elements;
     Node previous_node = dummy;
-    int compareResult = map->compareMapKeyFunction(keyElement, dummy->key);
-    Node newNode = createList();
+    int compareResult = map->compareMapKeyFunction(keyElement, getKey(dummy));
+    Node newNode = createEmptyNode();
     if(initializeNode(map, newNode, dataElement, keyElement) != MAP_SUCCESS){
         return MAP_OUT_OF_MEMORY;
     }
     if(compareResult < 0){
-        newNode->next = dummy;
+        setNext(newNode, dummy);
         map->elements = newNode;
     } else {
-        while(dummy->next != NULL && compareResult > 0){
+        while(getNext(dummy) != NULL && compareResult > 0){
             previous_node = dummy;
-            dummy = dummy->next;
-            compareResult = map->compareMapKeyFunction(keyElement, dummy->key);
+            dummy = getNext(dummy);
+            compareResult = map->compareMapKeyFunction(keyElement, getKey(dummy));
         }
 
         if(compareResult > 0){
-            dummy->next = newNode;
+            setNext(dummy, newNode);
         } else {
-            newNode->next = dummy;
-            previous_node->next = newNode;
+            setNext(newNode, dummy);
+            setNext(previous_node, newNode);
         }
     }
     map->size++;
@@ -224,29 +223,18 @@ static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyE
     if(node == NULL){
         return MAP_OUT_OF_MEMORY;
     }
-    MapKeyElement temp_key = map->copyMapKeyFunction(key);
-    if(temp_key == NULL){
+    MapKeyElement new_key = map->copyMapKeyFunction(key);
+    if(new_key == NULL){
         return MAP_OUT_OF_MEMORY;
     }
-    MapDataElement temp_data = map->copyDataFunction(data);
-    if(temp_data == NULL){
-        map->freeMapKeyFunction(temp_key);
+    MapDataElement new_data = map->copyDataFunction(data);
+    if(new_data == NULL){
+        map->freeMapKeyFunction(new_data);
         return MAP_OUT_OF_MEMORY;
     }
-    node->key = temp_key;
-    node->data = temp_data;
+    setKey(node, new_key);
+    setData(node, map->freeMapDataFunction, new_data);
     return MAP_SUCCESS;
-}
-
-static Node createList(){
-    Node node = malloc(sizeof(*node));
-    if(node == NULL){
-        return NULL;
-    }
-    node->next = NULL;
-    node->data = NULL;
-    node->key = NULL;
-    return node;
 }
 
 /**
@@ -262,15 +250,15 @@ static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement
     }
     Node dummy = map->elements;
 
-    while(dummy->next != NULL && map->compareMapKeyFunction(dummy->key, keyElement)){
-        dummy = dummy->next;
+    while(getNext(dummy) != NULL && map->compareMapKeyFunction(getKey(dummy), keyElement)){
+        dummy = getNext(dummy);
     }
     MapDataElement temp_data = map->copyDataFunction(dataElement);
     if(temp_data == NULL){
         return MAP_OUT_OF_MEMORY;
     }
-    map->freeMapDataFunction(dummy->data);
-    dummy->data = temp_data;
+    map->freeMapDataFunction(getData(dummy));
+    setData(dummy, map->freeMapDataFunction ,temp_data);
     return MAP_SUCCESS;
 }
 
@@ -278,7 +266,7 @@ MapKeyElement mapGetFirst(Map map){
     if(map == NULL || map->size == 0)
         return NULL;
     map->pointer = map->elements;
-    return map->copyMapKeyFunction((MapKeyElement)map->pointer->key);
+    return map->copyMapKeyFunction((MapKeyElement)getKey(map->pointer));
 }
 
 MapDataElement mapGet(Map map, MapKeyElement keyElement){
@@ -286,20 +274,21 @@ MapDataElement mapGet(Map map, MapKeyElement keyElement){
         return NULL;
     }
     Node dummy = map->elements;
-    int compareResult = map->compareMapKeyFunction(keyElement, dummy->key);
-    while(dummy->next != NULL && compareResult != 0){
-        dummy = dummy->next;
-        compareResult = map->compareMapKeyFunction(keyElement, dummy->key);
+    int compareResult = map->compareMapKeyFunction(keyElement, getKey(dummy));
+    while(getNext(dummy) != NULL && compareResult != 0){
+        dummy = getNext(dummy);
+        compareResult = map->compareMapKeyFunction(keyElement, getKey(dummy));
     }
-    if(compareResult == 0)
-        return (MapDataElement)dummy->data;
+    if(compareResult == 0) {
+        return (MapDataElement) getData(dummy);
+    }
     return NULL;
 }
 
 MapKeyElement mapGetNext(Map map){
-    if(map == NULL || map->pointer == NULL || map->pointer->next == NULL){
+    if(map == NULL || map->pointer == NULL || getNext(map->pointer) == NULL){
         return NULL;
     }
-    map->pointer = map->pointer->next;
-    return map->copyMapKeyFunction(map->pointer->key);
+    map->pointer = getNext(map->pointer);
+    return map->copyMapKeyFunction(getKey(map->pointer));
 }
