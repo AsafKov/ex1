@@ -452,6 +452,7 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
         updateDraws(system_profile, -getNumOfDraws(tournament_profile));
         updateLosses(system_profile, -getNumOfLosses(tournament_profile));
         updateWins(system_profile, -getNumOfWins(tournament_profile));
+        updatePlayerPlayTime(system_profile, -getPlayerPlayTime(tournament_profile));
     }
     mapRemove(chess->tournaments, (MapKeyElement)&tournament_id);
     return CHESS_SUCCESS;
@@ -567,6 +568,8 @@ void updatePlayersStatistics(Map players, ChessGame game, int first_player, int 
     }
     updateGamesPlayed(first_player_profile);
     updateGamesPlayed(second_player_profile);
+    updatePlayerPlayTime(first_player_profile, getDuration(game));
+    updatePlayerPlayTime(second_player_profile, getDuration(game));
 }
 
 ChessResult chessAddPlayer(ChessSystem  chess, ChessTournament tournament, int player_id) {
@@ -640,12 +643,28 @@ int compareTournamentScores(Player current_player, int *current_highest, Player 
 
 //TODO: TBD
 double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResult *chess_result) {
-    if (chess == NULL)
+    if (chess == NULL) {
         *chess_result = CHESS_NULL_ARGUMENT;
-    if (!isPlayerInSystem(chess, player_id))
+        return 0;
+    }
+    if(!isValidID(player_id)){
+        *chess_result = CHESS_INVALID_ID;
+        return 0;
+    }
+    Player player = mapGet(chess->players, &player_id);
+    if (!isPlayerInSystem(chess, player_id) || (player != NULL && isRemoved(player))) {
         *chess_result = CHESS_PLAYER_NOT_EXIST;
+        return 0;
+    }
+    if(player == NULL){
+        *chess_result = CHESS_OUT_OF_MEMORY;
+        return 0;
+    }
+    double games_played = getNumOfWins(player) + getNumOfDraws(player) + getNumOfLosses(player);
+    double total_time = getPlayerPlayTime(player);
+    double average_time = total_time/games_played;
     *chess_result = CHESS_SUCCESS;
-    return 0;
+    return average_time;
 }
 
 double calculatePlayerLevel(Player player) {

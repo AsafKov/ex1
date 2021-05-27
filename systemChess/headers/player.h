@@ -21,7 +21,11 @@ int getNumOfLosses(Player player);
 
 bool isRemoved(Player player);
 
+int getPlayerPlayTime(Player player);
+
 void updateWins(Player player, int wins);
+
+void updatePlayerPlayTime(Player player, int time);
 
 void updateDraws(Player player, int draws);
 

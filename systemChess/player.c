@@ -6,6 +6,7 @@ struct player {
     int wins;
     int draws;
     int losses;
+    int play_time;
     bool is_removed;
 };
 
@@ -20,6 +21,7 @@ Player createPlayer(int id){
     player->draws = 0;
     player->losses = 0;
     player->is_removed = false;
+    player->play_time = 0;
     return player;
 }
 
@@ -50,6 +52,10 @@ int getNumOfLosses(Player player){
 
 bool isRemoved(Player player){
     return player->is_removed;
+}
+
+int getPlayerPlayTime(Player player){
+    return player->play_time;
 }
 
 void updateWins(Player player, int wins){
@@ -96,6 +102,10 @@ void setPlayerLosses(Player player, int losses){
     player->losses = losses;
 }
 
+void updatePlayerPlayTime(Player player, int time){
+    player->play_time += time;
+}
+
 Player copyPlayer(Player data) {
     if (data == NULL) {
         return NULL;
@@ -110,6 +120,7 @@ Player copyPlayer(Player data) {
     player->draws = data->draws;
     player->losses = data->losses;
     player->is_removed = data->is_removed;
+    player->play_time = data->play_time;
     if(player == NULL){
         return NULL;
     }
