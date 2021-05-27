@@ -458,18 +458,21 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
 }
 
 void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id){
-    if(getFirstPlayerId(game) == player_id){
-        int second_player_id= getSecondPlayerId(game);
-        Player second_player = mapGet(chess->players, (MapKeyElement)&second_player_id);
+    int first_player_id = getFirstPlayerId(game);
+    int second_player_id = getSecondPlayerId(game);
+    Player first_player = mapGet(chess->players, &first_player_id);
+    Player second_player = mapGet(chess->players, &second_player_id);
+    if(first_player == NULL || second_player == NULL){
+        return;
+    }
+    if(first_player_id == player_id){
         if(isRemoved(second_player)){
             setGameWinner(game, DRAW);
         } else{
             setGameWinner(game, SECOND_PLAYER);
         }
     }
-    if(getSecondPlayerId(game) == player_id){
-        int first_player_id= getFirstPlayerId(game);
-        Player first_player = mapGet(chess->players, (MapKeyElement)&first_player_id);
+    if(second_player_id == player_id){
         if(isRemoved(first_player)){
             setGameWinner(game, DRAW);
         } else{
@@ -494,7 +497,9 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
         }
         players = getPlayers(current_tournament);
         tournament_profile = mapGet(players, &player_id);
-        setIsRemoved(tournament_profile, true);
+        if(tournament_profile != NULL){
+            setIsRemoved(tournament_profile, true);
+        }
         games = getGames(current_tournament);
         MAP_FOREACH(MapKeyElement, gamesIterator, games){
             current_game = mapGet(games, gamesIterator);
@@ -520,11 +525,15 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id) {
         return CHESS_NULL_ARGUMENT;
     if (!isValidID(player_id))
         return CHESS_INVALID_ID;
-    if (!isPlayerInSystem(chess, player_id))
+    if (!isPlayerInSystem(chess, player_id)){
         return CHESS_PLAYER_NOT_EXIST;
+    }
     Player player = mapGet(chess->players, (MapKeyElement)&player_id);
     ChessResult result = CHESS_SUCCESS;
     if(player != NULL){
+        if(isRemoved(player)){
+            return CHESS_PLAYER_NOT_EXIST;
+        }
         setIsRemoved(player, true);
         result = chessRemovePlayerEffects(chess, player);
     }

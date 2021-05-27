@@ -102,6 +102,9 @@ Map mapCopy(Map map){
         return NULL;
     }
 
+    if(mapGetSize(map) == 0){
+        return map_copy;
+    }
     map_copy->elements = createEmptyNode();
     if(map_copy->elements == NULL){
         free(map_copy);
