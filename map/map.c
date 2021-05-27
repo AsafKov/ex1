@@ -84,8 +84,8 @@ MapResult mapRemove(Map map, MapKeyElement keyElement){
     } else {
         map->elements = getNext(dummy);
     }
-    map->freeMapKeyFunction(getKey(dummy));
     map->freeMapDataFunction(getData(dummy));
+    map->freeMapKeyFunction(getKey(dummy));
     free(dummy);
     map->size--;
     return MAP_SUCCESS;
