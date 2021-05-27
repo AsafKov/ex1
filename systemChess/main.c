@@ -110,15 +110,11 @@ MapDataElement copyMapDataGame(MapDataElement data) {
 }
 MapDataElement copyMapDataPlayer(MapDataElement data) {
     Player* original = (Player*) data;
-    Player player_copy = createPlayer(getPlayerId(*original));
+    Player* player_copy = createEmptyPlayer();
     if(player_copy == NULL){
         return NULL;
     }
-    setGamesPlayed(player_copy, getNumOfGames(*original));
-    setPlayerWins(player_copy, getNumOfWins(*original));
-    setPlayerDraws(player_copy, getNumOfDraws(*original));
-    setPlayerLosses(player_copy, getNumOfLosses(*original));
-    setIsRemoved(player_copy, isRemoved(*original));
+    *player_copy = *original;
     return player_copy;
 }
 
