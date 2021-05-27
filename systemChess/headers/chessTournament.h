@@ -27,6 +27,8 @@ void setGamesMap(ChessTournament tournament, Map games);
 void setPlayersMap(ChessTournament tournament, Map players);
 void setTournamentWinner(ChessTournament tournament, int winnerId);
 const char* getTournamentLocation(ChessTournament tournament);
+void freeTournament(ChessTournament data) ;
+ChessTournament copyTournament(ChessTournament data, Map games, Map players);
 
 
 #endif //EX1_CHESSTOURNAMENT_H

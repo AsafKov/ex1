@@ -100,3 +100,62 @@ void setPlayersMap(ChessTournament tournament, Map players){
 void setTournamentWinner(ChessTournament tournament, int winnerId){
     tournament->tournament_winner = winnerId;
 }
+
+
+void freeTournament(ChessTournament data) {
+    if (data == NULL) {
+        return;
+    }
+    mapDestroy(data->players);
+    setPlayersMap(data, NULL);
+    mapDestroy(data->games);
+    setGamesMap(data, NULL);
+    free(data);
+    data = NULL;
+}
+
+ChessTournament copyTournament(ChessTournament data, Map game_map, Map players_map) {
+    if (data == NULL) {
+        return NULL;
+    }
+    ChessTournament tournament = createEmptyTournament();
+    if (tournament == NULL) {
+        return NULL;
+    }
+    tournament->id = data->id ;
+    tournament->tournament_location = data->tournament_location;
+    tournament->tournament_winner = data->tournament_winner;
+    tournament->max_games_per_player = data->max_games_per_player;
+    tournament->has_ended = data->has_ended;
+    tournament->longest_game_time = data->longest_game_time;
+    tournament->num_valid_time_games = data->num_valid_time_games;
+    tournament->sum_valid_time_games = data->sum_valid_time_games;
+    tournament->last_game_id = data->last_game_id;
+    tournament->num_players = data->num_valid_time_games;
+
+    Map games = data->games;
+    if (games != NULL) {
+        mapDestroy(game_map);
+        tournament->games =  mapCopy(games);
+        if (tournament->games == NULL) {
+            free(tournament);
+            return NULL;
+        }
+    } else {
+        tournament->games = game_map;
+    }
+
+    Map players = data->players;
+    if (players != NULL) {
+        mapDestroy(players_map);
+        tournament->players = mapCopy(players);
+        if (tournament->players == NULL) {
+            mapDestroy(getGames(tournament));
+            free(tournament);
+            return NULL;
+        }
+    } else {
+        tournament->players = players_map;
+    }
+    return tournament;
+}

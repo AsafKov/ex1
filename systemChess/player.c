@@ -95,3 +95,23 @@ void setPlayerDraws(Player player, int draws){
 void setPlayerLosses(Player player, int losses){
     player->losses = losses;
 }
+
+Player copyPlayer(Player data) {
+    if (data == NULL) {
+        return NULL;
+    }
+    Player player = createEmptyPlayer();
+    if (player == NULL) {
+        return NULL;
+    }
+    player->id = data->id;
+    player->games_played = data->games_played;
+    player->wins = data->wins;
+    player->draws = data->draws;
+    player->losses = data->losses;
+    player->is_removed = data->is_removed;
+    if(player == NULL){
+        return NULL;
+    }
+    return player;
+}

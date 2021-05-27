@@ -9,7 +9,7 @@ struct chess_game_t {
 };
 
 ChessGame createChessGame(int id, int first_player, int second_player, Winner winner, int duration){
-    ChessGame game = malloc(sizeof(*game));
+    ChessGame game = (ChessGame)malloc(sizeof(struct chess_game_t));
     if(game == NULL){
         return NULL;
     }
@@ -21,8 +21,8 @@ ChessGame createChessGame(int id, int first_player, int second_player, Winner wi
     return game;
 }
 
-ChessGame* createEmptyChessGame(){
-    ChessGame* game = malloc(sizeof(game));
+ChessGame createEmptyChessGame(){
+    ChessGame game = (ChessGame)malloc(sizeof(struct chess_game_t));
     return game;
 }
 
@@ -48,4 +48,20 @@ int getDuration(ChessGame game){
 
 void setGameWinner(ChessGame game, Winner game_winner){
     game->game_winner=game_winner;
+}
+
+ChessGame copyGame(ChessGame data) {
+    if (data == NULL) {
+        return NULL;
+    }
+    ChessGame game = createEmptyChessGame();
+    if (game == NULL) {
+        return NULL;
+    }
+    game->game_id = data->game_id;
+    game->first_player = data->first_player;
+    game->second_player = data->second_player;
+    game->game_winner = data->game_winner;
+    game->duration = data->duration;
+    return game;
 }

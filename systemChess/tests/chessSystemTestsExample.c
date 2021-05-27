@@ -31,7 +31,6 @@ bool testChessAddTournament_segel() {
     ASSERT_TEST(chessAddTournament(chess, 1, 4, "London") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddTournament(chess, 2, 5, "London") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddTournament(chess, 1, 10, "Paris") == CHESS_TOURNAMENT_ALREADY_EXISTS);
-
     chessDestroy(chess);
     return true;
 }
@@ -158,7 +157,7 @@ bool testChessAddTournamentAndEndTournament_maaroof() {
     ChessSystem sys2 = chessCreate();
     ASSERT_TEST(chessAddTournament(sys2, 1, 1, "Location one") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddTournament(sys2, 2, 1, "Location two") == CHESS_SUCCESS);
-//    ASSERT_TEST(chessSaveTournamentStatistics(sys2, "document.txt") == CHESS_NO_TOURNAMENTS_ENDED);
+    ASSERT_TEST(chessSaveTournamentStatistics(sys2, "document.txt") == CHESS_NO_TOURNAMENTS_ENDED);
 
     chessDestroy(sys2);
     chessDestroy(sys1);
@@ -204,6 +203,7 @@ bool testChessAddGame_maaroof()
 
     ASSERT_TEST(chessAddGame(sys1, 4, player_3, player_4, FIRST_PLAYER, 10) == CHESS_SUCCESS);
     ASSERT_TEST(chessRemovePlayer(sys1,player_3) == CHESS_SUCCESS);
+    printstuff(sys1, 4, player_3);
     ASSERT_TEST(chessAddGame(sys1, 4, player_3, player_4, FIRST_PLAYER, 10) == CHESS_SUCCESS);
 
     chessDestroy(sys1);

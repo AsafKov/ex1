@@ -42,4 +42,8 @@ void setPlayerWins(Player player, int wins);
 void setPlayerDraws(Player player, int draws);
 
 void setPlayerLosses(Player player, int losses);
+
+Player copyPlayer(Player data);
+
+
 #endif //EX1_PLAYER_H
