@@ -23,8 +23,8 @@ Player createPlayer(int id){
     return player;
 }
 
-Player* createEmptyPlayer(){
-    Player *player = malloc(sizeof(struct player));
+Player createEmptyPlayer(){
+    Player player = (Player) malloc(sizeof(struct player));
     return player;
 }
 

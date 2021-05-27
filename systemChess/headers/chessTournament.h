@@ -26,5 +26,7 @@ void setLongestGameDuration(ChessTournament tournament, int time);
 void setGamesMap(ChessTournament tournament, Map games);
 void setPlayersMap(ChessTournament tournament, Map players);
 void setTournamentWinner(ChessTournament tournament, int winnerId);
+const char* getTournamentLocation(ChessTournament tournament);
+
 
 #endif //EX1_CHESSTOURNAMENT_H

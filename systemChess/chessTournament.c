@@ -49,6 +49,11 @@ Map getPlayers(ChessTournament tournament){
 int getTournamentId(ChessTournament tournament){
     return tournament->id;
 }
+
+const char* getTournamentLocation(ChessTournament tournament){
+    return tournament->tournament_location;
+}
+
 int getLastGameId(ChessTournament tournament){
     return tournament->last_game_id++;
 }

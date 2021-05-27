@@ -7,7 +7,7 @@ typedef struct player *Player;
 
 Player createPlayer(int id);
 
-Player* createEmptyPlayer();
+Player createEmptyPlayer();
 
 int getPlayerId(Player player);
 
