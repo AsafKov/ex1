@@ -57,7 +57,7 @@ bool testChessAddGame_segel(){
 }
 
 bool testChessPrintLevelsAndTournamentStatistics_segel(){
-    FILE* file_levels = fopen("your_output/player_levels_your_output.txt", "w");
+    FILE* file_levels = fopen("player_levels_your_output.txt", "w");
     if(!file_levels){
         printf("test failed to open file, make sure you have the folder tests in the same folder with chessSystem"
                "excutable file and you have write permissions for the file /tests/player_levels_your_output.txt");
@@ -73,7 +73,7 @@ bool testChessPrintLevelsAndTournamentStatistics_segel(){
     ASSERT_TEST(chessAddGame(chess, 1, 3, 4, DRAW, 400) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(chess, 1) == CHESS_SUCCESS);
     ASSERT_TEST(chessSavePlayersLevels(chess, file_levels) == CHESS_SUCCESS);
-    ASSERT_TEST(chessSaveTournamentStatistics(chess, "your_output/tournament_statistics_your_output.txt") == CHESS_SUCCESS);
+    ASSERT_TEST(chessSaveTournamentStatistics(chess, "tournament_statistics_your_output.txt") == CHESS_SUCCESS);
     fclose(file_levels);
 
     /*FILE* file_levels_expected = fopen("expected_output/player_levels_expected_output.txt", "r");
@@ -140,13 +140,12 @@ bool testChessAddTournamentAndEndTournament_maaroof() {
     ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 2) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_SUCCESS);
-    ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 4) == CHESS_TOURNAMENT_NOT_EXIST);
     ASSERT_TEST(chessEndTournament(sys1, -1) == CHESS_INVALID_ID);
 
 
     ASSERT_TEST(chessAddGame(sys1, 1, 4, 5, FIRST_PLAYER, 10) == CHESS_TOURNAMENT_ENDED);
-    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_add_tournament_end_tournament_your_output.txt") == CHESS_SUCCESS);
+    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "test_add_tournament_end_tournament_your_output.txt") == CHESS_SUCCESS);
     /*FILE* f1 = fopen("your_output/test_add_tournament_end_tournament_your_output.txt", "r");
     FILE* f2 = fopen("expected_output/test_add_tournament_end_tournament_expected_output.txt", "r");
     ASSERT_TEST(compareFile(f1, f2) == 0);
@@ -232,10 +231,10 @@ bool testRemoveTournament_maaroof()
     ASSERT_TEST(chessAddGame(sys1, 1, player_1, player_2, FIRST_PLAYER, 10) == CHESS_SUCCESS);
     ASSERT_TEST(chessAddGame(sys1, 1, player_3, player_2, FIRST_PLAYER, 10) == CHESS_SUCCESS);
 
-    ASSERT_TEST(chessSaveTournamentStatistics(sys1,"your_output/test_tournament_remove_your_output.txt") == CHESS_NO_TOURNAMENTS_ENDED);
+    ASSERT_TEST(chessSaveTournamentStatistics(sys1,"test_tournament_remove_your_output.txt") == CHESS_NO_TOURNAMENTS_ENDED);
 
     ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);
-    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_tournament_remove_your_output.txt") == CHESS_SUCCESS);
+    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "test_tournament_remove_your_output.txt") == CHESS_SUCCESS);
     /*FILE* f1 = fopen("your_output/test_tournament_remove_your_output.txt", "r");
     FILE* f2 = fopen("expected_output/test_tournament_remove_expected_output.txt", "r");
     ASSERT_TEST(compareFile(f1, f2) == 0);
@@ -260,7 +259,7 @@ bool testChessRemovePlayer_maaroof() {
     ASSERT_TEST(chessAddGame(sys1, 1, player_3, player_2, FIRST_PLAYER, 4) == CHESS_SUCCESS); //tour 1: add 3,2
     ASSERT_TEST(chessAddGame(sys1, 2, player_1, player_2, FIRST_PLAYER, 10) == CHESS_SUCCESS);//tour 2: add 1,2
 
-    FILE* file_levels = fopen("your_output/player_levels_all.txt", "w");
+    FILE* file_levels = fopen("player_levels_all.txt", "w");
     ASSERT_TEST(chessSavePlayersLevels(sys1, file_levels) == CHESS_SUCCESS);
     fclose(file_levels);
 
@@ -274,7 +273,7 @@ bool testChessRemovePlayer_maaroof() {
     ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);//end 1
     ASSERT_TEST(chessEndTournament(sys1, 2) == CHESS_SUCCESS);//end 2
 
-    FILE* file_levels_2 = fopen("your_output/remove_player_1.txt", "w");
+    FILE* file_levels_2 = fopen("remove_player_1.txt", "w");
     ASSERT_TEST(chessSavePlayersLevels(sys1, file_levels_2) == CHESS_SUCCESS);//print
     ASSERT_TEST(chessRemovePlayer(sys1, player_1) == CHESS_PLAYER_NOT_EXIST);
     fclose(file_levels_2);
@@ -300,7 +299,7 @@ bool testChessRemovePlayer_2_maaroof() {
 
     ASSERT_TEST(chessAddGame(sys1, 1, player_1, player_2, FIRST_PLAYER, 6) == CHESS_SUCCESS); //tour 1: add 1,2
 
-    FILE* file1 = fopen("your_output/before_remove.txt", "w");
+    FILE* file1 = fopen("before_remove.txt", "w");
     ASSERT_TEST(chessSavePlayersLevels(sys1, file1) == CHESS_SUCCESS);
     fclose(file1);
 
@@ -312,7 +311,7 @@ bool testChessRemovePlayer_2_maaroof() {
 
     ASSERT_TEST(chessRemovePlayer(sys1, player_1) == CHESS_SUCCESS);//remove 1
 
-    file1 = fopen("your_output/after_remove.txt", "w");
+    file1 = fopen("after_remove.txt", "w");
     ASSERT_TEST(chessSavePlayersLevels(sys1, file1) == CHESS_SUCCESS);
     fclose(file1);
 
@@ -324,7 +323,7 @@ bool testChessRemovePlayer_2_maaroof() {
 
     ASSERT_TEST(chessAddGame(sys1, 1, player_1, player_2, FIRST_PLAYER, 6) == CHESS_SUCCESS); //tour 1: add 1,2
 
-    file1 = fopen("your_output/add_same_game_after_remove.txt", "w");
+    file1 = fopen("add_same_game_after_remove.txt", "w");
     ASSERT_TEST(chessSavePlayersLevels(sys1, file1) == CHESS_SUCCESS);
     fclose(file1);
 
@@ -420,7 +419,7 @@ bool testSavePlayerLevelsAndTournamentStatistics_maaroof()
 
     ASSERT_TEST(chessAddGame(sys1, 4, player_1, player_2, FIRST_PLAYER, 6) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 4) == CHESS_SUCCESS);
-    fileName = "your_output/tournament_statistics_1.txt";
+    fileName = "tournament_statistics_1.txt";
     ASSERT_TEST(chessSaveTournamentStatistics(sys1, fileName) == CHESS_SUCCESS);
 
     /*FILE* f1 = fopen("your_output/tournament_statistics_1.txt", "r");
@@ -432,7 +431,7 @@ bool testSavePlayerLevelsAndTournamentStatistics_maaroof()
     ASSERT_TEST(chessAddGame(sys1, 3, player_1, player_2, FIRST_PLAYER, 6) == CHESS_SUCCESS);
     ASSERT_TEST(chessRemovePlayer(sys1, 1));
     ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_SUCCESS);
-    fileName = "your_output/tournament_statistics_2.txt";
+    fileName = "tournament_statistics_2.txt";
     ASSERT_TEST(chessSaveTournamentStatistics(sys1, fileName) == CHESS_SUCCESS);
 
     /* f1 = fopen("your_output/tournament_statistics_2.txt", "r");
@@ -443,7 +442,7 @@ bool testSavePlayerLevelsAndTournamentStatistics_maaroof()
 
     ASSERT_TEST(chessAddGame(sys1, 2, player_1, player_2, FIRST_PLAYER, 6) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 2) == CHESS_SUCCESS);
-    fileName = "your_output/tournament_statistics_3.txt";
+    fileName = "tournament_statistics_3.txt";
     ASSERT_TEST(chessSaveTournamentStatistics(sys1, fileName) == CHESS_SUCCESS);
 
     /* f1 = fopen("your_output/tournament_statistics_3.txt", "r");

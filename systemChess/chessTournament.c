@@ -1,4 +1,5 @@
 #include "headers/chessTournament.h"
+#include <string.h>
 
 struct chess_tournament_t {
     Map games;
@@ -8,11 +9,7 @@ struct chess_tournament_t {
     int tournament_winner;
     int max_games_per_player;
     bool has_ended;
-    int longest_game_time;
-    int num_valid_time_games;
-    int sum_valid_time_games;
     int last_game_id;
-    int num_players;
 };
 
 // creates new empty tournament
@@ -31,11 +28,7 @@ ChessTournament createChessTournament(int tournament_id, int max_games_per_playe
     tournament->tournament_winner = -1;
     tournament->max_games_per_player = max_games_per_player;
     tournament->has_ended = false;
-    tournament->longest_game_time = -1;
-    tournament->num_valid_time_games = 0;
-    tournament->sum_valid_time_games = 0;
     tournament->last_game_id = 0;
-    tournament->num_players = 0;
 
     return tournament;
 }
@@ -69,25 +62,9 @@ int getMaxGamesPerPlayer(ChessTournament tournament){
 bool hasEnded(ChessTournament tournament){
     return tournament->has_ended;
 }
-int getLongestGameDuration(ChessTournament tournament){
-    return tournament->longest_game_time;
-}
-int getValidTimeGames(ChessTournament tournament){
-    return tournament->num_valid_time_games;
-}
-int getSumValidTimeGames(ChessTournament tournament){
-    return tournament->sum_valid_time_games;
-}
-int getNumOfPlayers(ChessTournament tournament){
-    return tournament->num_players;
-}
 
 void setHasEnded(ChessTournament tournament, bool hasEnded){
     tournament->has_ended = hasEnded;
-}
-
-void setLongestGameDuration(ChessTournament tournament, int time){
-    tournament->longest_game_time = time;
 }
 
 void setGamesMap(ChessTournament tournament, Map games){
@@ -127,11 +104,7 @@ ChessTournament copyTournament(ChessTournament data, Map game_map, Map players_m
     tournament->tournament_winner = data->tournament_winner;
     tournament->max_games_per_player = data->max_games_per_player;
     tournament->has_ended = data->has_ended;
-    tournament->longest_game_time = data->longest_game_time;
-    tournament->num_valid_time_games = data->num_valid_time_games;
-    tournament->sum_valid_time_games = data->sum_valid_time_games;
     tournament->last_game_id = data->last_game_id;
-    tournament->num_players = data->num_valid_time_games;
 
     Map games = data->games;
     if (games != NULL) {

@@ -35,7 +35,7 @@ int compareTournamentScores(Player current_player, int *current_highest, Player 
 void preformSwitcharoo(int *first_id, int *second_id, double *first_score, double *second_score);
 void maxSort(int *ids, double *scores, int size);
 void printArrays(int size, int *ids, double *scores);
-
+void calculateTournamentStatistics(double *average_game_time, int *longest_game, ChessTournament tournament);
 
 // Chess Functions //
 ChessResult convertMapResultToChessResult(MapResult map_result);
@@ -746,13 +746,54 @@ void preformSwitcharoo(int *first_id, int *second_id, double *first_score, doubl
     *second_score = dummy_score;
 }
 
-//TODO: TBD
 ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
-    if (chess == NULL)
+    if (chess == NULL || path_file == NULL){
         return CHESS_NULL_ARGUMENT;
-    if (path_file == NULL)
+    }
+
+    FILE *tournament_statistics =  fopen((const char *) path_file, "w");
+    if(tournament_statistics == NULL){
         return CHESS_SAVE_FAILURE;
+    }
+    Map tournaments = chess->tournaments;
+    ChessTournament current_tournament;
+    double *average_game_time = malloc(sizeof(double));
+    int *longest_game = malloc(sizeof(int));
+    MAP_FOREACH(MapKeyElement, tournamentsIterator, tournaments){
+        current_tournament = mapGet(tournaments, tournamentsIterator);
+        freeMapKey(tournamentsIterator);
+        if(current_tournament == NULL){
+            continue;
+        }
+        *average_game_time = 0;
+        *longest_game = 0;
+        calculateTournamentStatistics(average_game_time, longest_game, current_tournament);
+        fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d",
+                getWinnerId(current_tournament), *longest_game, *average_game_time, getLocation(current_tournament),
+                mapGetSize(getGames(current_tournament)), mapGetSize(getPlayers(current_tournament)));
+    }
+
+    free(longest_game);
+    free(average_game_time);
     return CHESS_SUCCESS;
 }
 
+void calculateTournamentStatistics(double *average_game_time, int *longest_game, ChessTournament tournament){
+    Map games = getGames(tournament);
+    ChessGame current_game;
+    int total_games = 0;
+    MAP_FOREACH(MapKeyElement, gamesIterator, games){
+        current_game = mapGet(games, gamesIterator);
+        freeMapKey(gamesIterator);
+        if(current_game == NULL){
+            continue;
+        }
+        if(getDuration(current_game) > *longest_game){
+            *longest_game = getDuration(current_game);
+        }
+        *average_game_time += getDuration(current_game);
+        total_games++;
+    }
+    *average_game_time /= total_games;
+}
 
