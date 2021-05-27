@@ -6,7 +6,7 @@
 typedef struct chess_tournament_t *ChessTournament;
 
 ChessTournament createChessTournament(int tournament_id, int max_games_per_player, const char *tournament_location);
-ChessTournament* createEmptyTournament();
+ChessTournament createEmptyTournament();
 
 Map getGames(ChessTournament tournament);
 Map getPlayers(ChessTournament tournament);
@@ -19,7 +19,7 @@ int getLongestGameDuration(ChessTournament tournament);
 int getValidTimeGames(ChessTournament tournament);
 int getSumValidTimeGames(ChessTournament tournament);
 int getNumOfPlayers(ChessTournament tournament);
-int getGamesCreated(ChessTournament tournament);
+int getLastGameId(ChessTournament tournament);
 
 void setHasEnded(ChessTournament tournament, bool hasEnded);
 void setLongestGameDuration(ChessTournament tournament, int time);

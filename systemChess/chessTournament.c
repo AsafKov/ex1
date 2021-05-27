@@ -11,13 +11,13 @@ struct chess_tournament_t {
     int longest_game_time;
     int num_valid_time_games;
     int sum_valid_time_games;
-    int games_created;
+    int last_game_id;
     int num_players;
 };
 
 // creates new empty tournament
-ChessTournament* createEmptyTournament(){
-    void *tournament = (ChessTournament) malloc(sizeof(struct chess_tournament_t));
+ChessTournament createEmptyTournament(){
+    ChessTournament tournament = (ChessTournament) malloc(sizeof(struct chess_tournament_t));
     return tournament;
 }
 
@@ -34,7 +34,7 @@ ChessTournament createChessTournament(int tournament_id, int max_games_per_playe
     tournament->longest_game_time = -1;
     tournament->num_valid_time_games = 0;
     tournament->sum_valid_time_games = 0;
-    tournament->games_created = 0;
+    tournament->last_game_id = 0;
     tournament->num_players = 0;
 
     return tournament;
@@ -49,8 +49,8 @@ Map getPlayers(ChessTournament tournament){
 int getTournamentId(ChessTournament tournament){
     return tournament->id;
 }
-int getGamesCreated(ChessTournament tournament){
-    return tournament->games_created;
+int getLastGameId(ChessTournament tournament){
+    return tournament->last_game_id++;
 }
 const char *getLocation(ChessTournament tournament){
     return tournament->tournament_location;
