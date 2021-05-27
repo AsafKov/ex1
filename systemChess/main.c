@@ -36,6 +36,7 @@ void preformSwitcharoo(int *first_id, int *second_id, double *first_score, doubl
 void maxSort(int *ids, double *scores, int size);
 void printArrays(int size, int *ids, double *scores);
 void calculateTournamentStatistics(double *average_game_time, int *longest_game, ChessTournament tournament);
+bool hasTournamentsEnded(ChessSystem chess);
 
 // Chess Functions //
 ChessResult convertMapResultToChessResult(MapResult map_result);
@@ -751,6 +752,10 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
         return CHESS_NULL_ARGUMENT;
     }
 
+    if(!hasTournamentsEnded(chess)){
+        return CHESS_NO_TOURNAMENTS_ENDED;
+    }
+
     FILE *tournament_statistics =  fopen((const char *) path_file, "w");
     if(tournament_statistics == NULL){
         return CHESS_SAVE_FAILURE;
@@ -776,6 +781,20 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
     free(longest_game);
     free(average_game_time);
     return CHESS_SUCCESS;
+}
+
+bool hasTournamentsEnded(ChessSystem chess){
+    ChessTournament current_tournament;
+    MAP_FOREACH(MapKeyElement, tournamentsIterator, chess->tournaments){
+        current_tournament = mapGet(chess->tournaments, tournamentsIterator);
+        if(current_tournament == NULL){
+            continue;
+        }
+        if(hasEnded(current_tournament)){
+            return true;
+        }
+    }
+    return false;
 }
 
 void calculateTournamentStatistics(double *average_game_time, int *longest_game, ChessTournament tournament){
