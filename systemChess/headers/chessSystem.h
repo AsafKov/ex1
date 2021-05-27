@@ -198,6 +198,5 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file);
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file);
 
 //TODO: REMOVE
-void printstuff(ChessSystem chess, int tournament_id, int player_id);
 
 #endif //HW1_CHESSSYSTEM_H

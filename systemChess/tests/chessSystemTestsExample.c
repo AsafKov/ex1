@@ -2,8 +2,6 @@
 #include "../headers/chessSystem.h"
 #include "test_utilities.h"
 
-/*The number of tests*/
-#define NUMBER_TESTS 4
 
 int compareFile(FILE* fPtr1, FILE* fPtr2)
 {
@@ -31,6 +29,7 @@ bool testChessAddTournament_segel() {
     ASSERT_TEST(chessAddTournament(chess, 1, 4, "London") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddTournament(chess, 2, 5, "London") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddTournament(chess, 1, 10, "Paris") == CHESS_TOURNAMENT_ALREADY_EXISTS);
+
     chessDestroy(chess);
     return true;
 }
@@ -58,12 +57,12 @@ bool testChessAddGame_segel(){
 }
 
 bool testChessPrintLevelsAndTournamentStatistics_segel(){
-//    FILE* file_levels = fopen("your_output/player_levels_output.txt", "w");
-//    if(!file_levels){
-//        printf("test failed to open file, make sure you have the folder tests in the same folder with chessSystem"
-//               "excutable file and you have write permissions for the file /tests/player_levels_output.txt");
-//        return false;
-//    }
+    FILE* file_levels = fopen("your_output/player_levels_your_output.txt", "w");
+    if(!file_levels){
+        printf("test failed to open file, make sure you have the folder tests in the same folder with chessSystem"
+               "excutable file and you have write permissions for the file /tests/player_levels_your_output.txt");
+        return false;
+    }
     ChessSystem chess = chessCreate();
     ASSERT_TEST(chessAddTournament(chess, 1, 4, "London") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddGame(chess, 1, 1, 2, FIRST_PLAYER, 2000) == CHESS_SUCCESS);
@@ -73,12 +72,12 @@ bool testChessPrintLevelsAndTournamentStatistics_segel(){
     ASSERT_TEST(chessAddGame(chess, 1, 2, 4, FIRST_PLAYER, 3500) == CHESS_SUCCESS);
     ASSERT_TEST(chessAddGame(chess, 1, 3, 4, DRAW, 400) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(chess, 1) == CHESS_SUCCESS);
-//    ASSERT_TEST(chessSavePlayersLevels(chess, file_levels) == CHESS_SUCCESS);
-//    ASSERT_TEST(chessSaveTournamentStatistics(chess, "your_output/tournament_statistics_output.txt") == CHESS_SUCCESS);
-//    fclose(file_levels);
+    ASSERT_TEST(chessSavePlayersLevels(chess, file_levels) == CHESS_SUCCESS);
+    ASSERT_TEST(chessSaveTournamentStatistics(chess, "your_output/tournament_statistics_your_output.txt") == CHESS_SUCCESS);
+    fclose(file_levels);
 
     /*FILE* file_levels_expected = fopen("expected_output/player_levels_expected_output.txt", "r");
-    file_levels = fopen("your_output/player_levels_output.txt", "r");
+    file_levels = fopen("your_output/player_levels_your_output.txt", "r");
     ASSERT_TEST(compareFile(file_levels, file_levels_expected) == 0);*/
 
     //fclose(file_levels_expected);
@@ -141,14 +140,14 @@ bool testChessAddTournamentAndEndTournament_maaroof() {
     ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 2) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_SUCCESS);
-    ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_TOURNAMENT_ENDED);
+    ASSERT_TEST(chessEndTournament(sys1, 3) == CHESS_SUCCESS);
     ASSERT_TEST(chessEndTournament(sys1, 4) == CHESS_TOURNAMENT_NOT_EXIST);
     ASSERT_TEST(chessEndTournament(sys1, -1) == CHESS_INVALID_ID);
 
 
     ASSERT_TEST(chessAddGame(sys1, 1, 4, 5, FIRST_PLAYER, 10) == CHESS_TOURNAMENT_ENDED);
-    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_add_tournament_end_tournament_output.txt") == CHESS_SUCCESS);
-    /*FILE* f1 = fopen("your_output/test_add_tournament_end_tournament_output.txt", "r");
+    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_add_tournament_end_tournament_your_output.txt") == CHESS_SUCCESS);
+    /*FILE* f1 = fopen("your_output/test_add_tournament_end_tournament_your_output.txt", "r");
     FILE* f2 = fopen("expected_output/test_add_tournament_end_tournament_expected_output.txt", "r");
     ASSERT_TEST(compareFile(f1, f2) == 0);
     fclose(f1);
@@ -157,7 +156,7 @@ bool testChessAddTournamentAndEndTournament_maaroof() {
     ChessSystem sys2 = chessCreate();
     ASSERT_TEST(chessAddTournament(sys2, 1, 1, "Location one") == CHESS_SUCCESS);
     ASSERT_TEST(chessAddTournament(sys2, 2, 1, "Location two") == CHESS_SUCCESS);
-//    ASSERT_TEST(chessSaveTournamentStatistics(sys2, "document.txt") == CHESS_NO_TOURNAMENTS_ENDED);
+    ASSERT_TEST(chessSaveTournamentStatistics(sys2, "document.txt") == CHESS_NO_TOURNAMENTS_ENDED);
 
     chessDestroy(sys2);
     chessDestroy(sys1);
@@ -203,7 +202,6 @@ bool testChessAddGame_maaroof()
 
     ASSERT_TEST(chessAddGame(sys1, 4, player_3, player_4, FIRST_PLAYER, 10) == CHESS_SUCCESS);
     ASSERT_TEST(chessRemovePlayer(sys1,player_3) == CHESS_SUCCESS);
-    printstuff(sys1, 4, player_3);
     ASSERT_TEST(chessAddGame(sys1, 4, player_3, player_4, FIRST_PLAYER, 10) == CHESS_SUCCESS);
 
     chessDestroy(sys1);
@@ -234,11 +232,11 @@ bool testRemoveTournament_maaroof()
     ASSERT_TEST(chessAddGame(sys1, 1, player_1, player_2, FIRST_PLAYER, 10) == CHESS_SUCCESS);
     ASSERT_TEST(chessAddGame(sys1, 1, player_3, player_2, FIRST_PLAYER, 10) == CHESS_SUCCESS);
 
-//    ASSERT_TEST(chessSaveTournamentStatistics(sys1,"your_output/test_tournament_remove_output.txt") == CHESS_NO_TOURNAMENTS_ENDED);
-//
-//    ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);
-//    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_tournament_remove_output.txt") == CHESS_SUCCESS);
-    /*FILE* f1 = fopen("your_output/test_tournament_remove_output.txt", "r");
+    ASSERT_TEST(chessSaveTournamentStatistics(sys1,"your_output/test_tournament_remove_your_output.txt") == CHESS_NO_TOURNAMENTS_ENDED);
+
+    ASSERT_TEST(chessEndTournament(sys1, 1) == CHESS_SUCCESS);
+    ASSERT_TEST(chessSaveTournamentStatistics(sys1, "your_output/test_tournament_remove_your_output.txt") == CHESS_SUCCESS);
+    /*FILE* f1 = fopen("your_output/test_tournament_remove_your_output.txt", "r");
     FILE* f2 = fopen("expected_output/test_tournament_remove_expected_output.txt", "r");
     ASSERT_TEST(compareFile(f1, f2) == 0);
     fclose(f1);
@@ -289,30 +287,6 @@ bool testChessRemovePlayer_maaroof() {
 
 
     chessDestroy(sys1);
-    return true;
-}
-
-bool testChessPlayerWithoutGamesStat_whitomtit() {
-    ChessSystem sys1 = chessCreate();
-    ASSERT_TEST(chessAddTournament(sys1, 1, 3, "Location one") == CHESS_SUCCESS);
-    ASSERT_TEST(chessAddTournament(sys1, 2, 3, "Location two") == CHESS_SUCCESS);
-
-    int player_1 = 1;
-    int player_2 = 2;
-    int player_3 = 3;
-    int player_4 = 4;
-    //int player_4 = 4;
-
-    ASSERT_TEST(chessAddGame(sys1, 1, player_1, player_2, FIRST_PLAYER, 6) == CHESS_SUCCESS); //tour 1: add 1,2
-    ASSERT_TEST(chessAddGame(sys1, 1, player_3, player_2, FIRST_PLAYER, 4) == CHESS_SUCCESS); //tour 1: add 3,2
-    ASSERT_TEST(chessAddGame(sys1, 1, player_3, player_4, FIRST_PLAYER, 3) == CHESS_SUCCESS);
-    ASSERT_TEST(chessAddGame(sys1, 2, player_1, player_2, FIRST_PLAYER, 10) == CHESS_SUCCESS);//tour 2: add 1,2
-    ASSERT_TEST(chessRemoveTournament(sys1, 1) == CHESS_SUCCESS);
-    FILE *file_levels = fopen("your_output/player_without_games.txt", "w");
-    ASSERT_TEST(chessSavePlayersLevels(sys1, file_levels));
-    fclose(file_levels);
-    chessDestroy(sys1);
-
     return true;
 }
 
@@ -496,8 +470,7 @@ bool (*tests[]) (void) = {
         testChessRemovePlayer_maaroof,
         testChessRemovePlayer_2_maaroof,
         testAvgGameTime_maaroof,
-        testSavePlayerLevelsAndTournamentStatistics_maaroof,
-        testChessPlayerWithoutGamesStat_whitomtit
+        testSavePlayerLevelsAndTournamentStatistics_maaroof
 };
 
 /*The names of the test functions should be added here*/
@@ -513,11 +486,10 @@ const char* testNames[] = {
         "testChessRemovePlayer_maaroof",
         "testChessRemovePlayer_2_maaroof",
         "testAvgGameTime_maaroof",
-        "testSavePlayerLevelsAndTournamentStatistics_maaroof",
-        "testChessPlayerWithoutGamesStat_whitomtit"
+        "testSavePlayerLevelsAndTournamentStatistics_maaroof"
 };
 
-#define NUMBER_TESTS 13
+#define NUMBER_TESTS 12
 
 int main(int argc, char *argv[]) {
     if (argc == 1) {

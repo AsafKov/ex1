@@ -8,6 +8,8 @@
 #include "headers/player.h"
 #include "../map/headers/map.h"
 
+//Defines
+
 // typedefs and structs //
 struct chess_system_t {
     Map tournaments;//key is tournament_id
@@ -30,6 +32,10 @@ static bool isMaxExceeded(ChessSystem chess, int tournament_id, int first_player
 static bool isPlayerInSystem(ChessSystem chess, int player_id);
 void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id);
 int compareTournamentScores(Player current_player, int *current_highest, Player current_winner);
+void preformSwitcharoo(int *first_id, int *second_id, double *first_score, double *second_score);
+void maxSort(int *ids, double *scores, int size);
+void printArrays(int size, int *ids, double *scores);
+
 
 // Chess Functions //
 ChessResult convertMapResultToChessResult(MapResult map_result);
@@ -62,7 +68,6 @@ void freeMapKey(MapKeyElement key) {
     free(key);
 }
 void freeMapData(MapDataElement data) {
-    Player test = (Player )data;
     free(data);
 }
 MapDataElement copyMapKey(MapKeyElement key) {
@@ -514,12 +519,6 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
     return CHESS_SUCCESS;
 }
 
-void printstuff(ChessSystem chess, int tournament_id, int player_id){
-    ChessTournament tournament = mapGet(chess->tournaments, &tournament_id);
-    Player player = mapGet(getPlayers(tournament), &player_id);
-    printf("%d", isRemoved(player));
-}
-
 //does not remove player from data, only flags player as removed
 ChessResult chessRemovePlayer(ChessSystem chess, int player_id) {
     if (chess == NULL)
@@ -581,7 +580,6 @@ ChessResult chessAddPlayer(ChessSystem  chess, ChessTournament tournament, int p
         mapPut(chess->players, (MapKeyElement) &player_id, (MapDataElement)player);
     }
     mapPut(getPlayers(tournament), (MapKeyElement) &player_id, (MapDataElement)player);
-    Player test = mapGet(chess->players, &player_id);
     return CHESS_SUCCESS;
 }
 
@@ -641,7 +639,6 @@ int compareTournamentScores(Player current_player, int *current_highest, Player 
     return -1;
 }
 
-//TODO: TBD
 double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResult *chess_result) {
     if (chess == NULL) {
         *chess_result = CHESS_NULL_ARGUMENT;
@@ -668,53 +665,85 @@ double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResu
 }
 
 double calculatePlayerLevel(Player player) {
-    int wins = getNumOfWins(player);
-    int draws = getNumOfDraws(player);
-    int losses = getNumOfLosses(player);
-    double level = 6 * wins + 2 * draws - 10 * losses;
-    return level;
+    double wins = getNumOfWins(player);
+    double draws = getNumOfDraws(player);
+    double losses = getNumOfLosses(player);
+    double total_games = wins + draws + losses;
+    double score = 6 * wins + 2 * draws - 10 * losses;
+    return score/total_games;
 }
 
-int comparePlayers(Player first, Player second) {
-    assert(first && second);
-    if (calculatePlayerLevel(first) > calculatePlayerLevel(second))
-        return 1;
-    if (calculatePlayerLevel(first) < calculatePlayerLevel(second))
-        return -1;
-
-    //at this point both players levels are equal, and we order them by map order of their IDs
-    if (getPlayerId(first) > getPlayerId(second))
-        return -1;
-    if (getPlayerId(first) < getPlayerId(second))
-        return 1;
-
-    //at this point both players levels are equal, and it is the same ID for some reason
-    return 0;
-}
-
-//TODO: make sure working with file is OK
-//TODO: check if we wanna use mapGet function instead (to find tournament ID)
-//TODO: where to put comparePlayers?
-//check if file is open and writable, otherwise chess_save_failure
 ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
-//    if (chess == NULL)
-//        return CHESS_NULL_ARGUMENT;
-//    if (file == NULL)
-//        return CHESS_NULL_ARGUMENT;
-//    //make sure working with file is OK
-//
-//
-//    int *key = (int *) mapGetFirst(chess->players);
-//    Player *current_player = (Player *) mapGet(chess->players, (MapKeyElement) key);
-//    while (current_player != NULL) {
-//        assert(chess->num_games > 0); //valid because first player is not null, i.e. games were entered into system
-//        if (!(*current_player)->has_been_removed)
-//            fprintf(file, "%d, %.2lf\n", (*current_player)->id,
-//                    calculatePlayerLevel(*current_player) / chess->num_games);
-//        key = mapGetNext(chess->players);
-//        current_player = (Player *) mapGet(chess->players, (MapKeyElement) key);
-//    }
+    if (chess == NULL) {
+        return CHESS_NULL_ARGUMENT;
+    }
+    if(file == NULL){
+        return CHESS_SAVE_FAILURE;
+    }
+
+    Map players = chess->players;
+    Player current_player;
+
+    int *ids = malloc(sizeof(int) * (unsigned int) mapGetSize(players));
+    double *scores = malloc(sizeof(double) * (unsigned int) mapGetSize(players));
+    int index = 0;
+    double level;
+    MAP_FOREACH(MapKeyElement, playerIterator, players){
+        current_player = mapGet(players, playerIterator);
+        freeMapKey(playerIterator);
+        if(current_player == NULL || isRemoved(current_player)){
+            continue;
+        }
+        level = calculatePlayerLevel(current_player);
+        ids[index] = getPlayerId(current_player);
+        scores[index] = level;
+        index++;
+    }
+    if(index < mapGetSize(players)-1){
+        ids[index] = -1;
+    }
+    maxSort(ids, scores, index);
+
+    for(int i=0; i<index; i++){
+        fprintf(file,"%d %.2f\n", ids[i], scores[i]);
+    }
+
     return CHESS_SUCCESS;
+}
+
+//TODO: delete later
+void printArrays(int size, int *ids, double *scores){
+    printf("\n");
+    for(int i=0; i<size; i++){
+        printf("%d, %f\n", ids[i], scores[i]);
+    }
+}
+
+void maxSort(int *ids, double *scores, int size){
+    int sorted = 0;
+    while(sorted < size && ids[sorted] != -1) {
+        for (int i = 0; i < size - sorted -1 && ids[i+1] != -1; i++) {
+            if (scores[i] < scores[i + 1]) {
+                preformSwitcharoo(&ids[i], &ids[i + 1], &scores[i], &scores[i + 1]);
+                continue;
+            }
+            if (scores[i] == scores[i + 1] && ids[i] > ids[i + 1]) {
+                preformSwitcharoo(&ids[i], &ids[i + 1], &scores[i], &scores[i + 1]);
+                continue;
+            }
+        }
+        sorted++;
+    }
+}
+
+void preformSwitcharoo(int *first_id, int *second_id, double *first_score, double *second_score){
+    int dummy_id = *first_id;
+    *first_id = *second_id;
+    *second_id = dummy_id;
+
+    double dummy_score = *first_score;
+    *first_score = *second_score;
+    *second_score = dummy_score;
 }
 
 //TODO: TBD
