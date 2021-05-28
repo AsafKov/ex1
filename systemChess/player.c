@@ -102,6 +102,10 @@ void setPlayerLosses(Player player, int losses){
     player->losses = losses;
 }
 
+void resetTimePlayed(Player player){
+    player->play_time = 0;
+}
+
 void updatePlayerPlayTime(Player player, int time){
     player->play_time += time;
 }

@@ -2,11 +2,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+//Defines
+//TODO: more defines?
 #define NULL_ARGUMENT_INDICATOR (-1)
 
 static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement dataElement);
 MapResult addNewValues(Map map, MapKeyElement keyElement, MapDataElement dataElement);
 static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyElement key);
+
+//TODO: use FOREACH\iterator function instead of getNext?
 
 struct Map_t {
     copyMapDataElements copyDataFunction;

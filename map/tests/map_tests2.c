@@ -136,7 +136,7 @@ bool testMapPutGet()
     //const char *value1 = "value1";
     ASSERT_TEST(mapPut(map, "key1", "value1") == MAP_SUCCESS);
     count++;
-    ASSERT_TEST(strcmp(mapGet(map, "key1"), "value1") == 0); //TODO
+    ASSERT_TEST(strcmp(mapGet(map, "key1"), "value1") == 0);
     //ASSERT_TEST(mapGet(map, "key1") != "value1");
     ASSERT_TEST(mapGetSize(map) == count);
 

@@ -37,6 +37,8 @@ void updateGamesPlayed(Player player);
 
 void resetGamesPlayed(Player player);
 
+void resetTimePlayed(Player player);
+
 void setPlayerId(Player player, int id);
 
 void setGamesPlayed(Player player, int gamesPlayed);
