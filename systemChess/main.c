@@ -92,87 +92,6 @@ MapDataElement copyMapDataPlayer(MapDataElement data) {
     return copyPlayer((Player) data);
 }
 
-//
-//void freeMapDataTournament(ChessTournament data) {
-//    if (data == NULL) {
-//        return;
-//    }
-//    mapDestroy(getPlayers(data));
-//    setPlayersMap(data, NULL);
-//    mapDestroy(getGames(data));
-//    setGamesMap(data, NULL);
-//    free(data);
-//    data = NULL;
-//}
-//void freeMapKey(MapKeyElement key) {
-//    free(key);
-//}
-//void freeMapData(MapDataElement data) {
-//    Player test = (Player )data;
-//    free(data);
-//}
-//int compareMapKeys(MapKeyElement key1, MapKeyElement key2) {
-//    if (key1 == NULL) return -1;
-//    if (key2 == NULL) return 1;
-//    return *((int *) key1) - (*(int *) key2);
-//}
-//MapDataElement copyMapKey(MapKeyElement key) {
-//    if (key == NULL) {
-//        return NULL;
-//    }
-//    int *key_copy = malloc(sizeof(int));
-//    *key_copy = *((int *) key);
-//    return key_copy;
-//}
-//MapDataElement copyMapDataTournament(MapDataElement data) {
-//    if (data == NULL) {
-//        return NULL;
-//    }
-//    ChessTournament tournament_copy = createEmptyTournament();
-//    tournament_copy = (ChessTournament)data;
-//    if (tournament_copy == NULL) {
-//        return NULL;
-//    }
-//    Map games = getGames(tournament_copy);
-//    if (games != NULL && mapGetSize(games) != 0) {
-//        setGamesMap(tournament_copy, mapCopy(games));
-//        if (getGames(tournament_copy) == NULL) {
-//            free(tournament_copy);
-//            return NULL;
-//        }
-//    }
-//
-//    Map players = getPlayers(tournament_copy);
-//    if (players != NULL && mapGetSize(players) != 0) {
-//        setPlayersMap(tournament_copy, mapCopy(players));
-//        if (getPlayers(tournament_copy) == NULL && players != NULL) {
-//            mapDestroy(getGames(tournament_copy));
-//            free(tournament_copy);
-//            return NULL;
-//        }
-//    }
-//    return (MapDataElement) tournament_copy;
-//}
-//MapDataElement copyMapDataGame(MapDataElement data) {
-//    ChessGame *copy = createEmptyChessGame();
-//    if (copy == NULL) {
-//        return NULL;
-//    }
-//    *copy = *(ChessGame *)data;
-//    return copy;
-//}
-//MapDataElement copyMapDataPlayer(MapDataElement data) {
-//    Player player_copy = createEmptyPlayer();
-//
-//    if(player_copy == NULL){
-//        return NULL;
-//    }
-//    return (MapDataElement)player_copy;
-//}
-
-
-
-
 /*
 MapDataElement copyMapDataPlayer(MapDataElement data) {
     Player original = (Player)data;
@@ -792,12 +711,14 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
     MAP_FOREACH(MapKeyElement, tournamentsIterator, tournaments){
         current_tournament = mapGet(tournaments, tournamentsIterator);
         freeMapKey(tournamentsIterator);
-        if(current_tournament == NULL){
+        if(current_tournament == NULL || !hasEnded(current_tournament)){
             continue;
         }
         *average_game_time = 0;
         *longest_game = 0;
-        calculateTournamentStatistics(current_tournament, average_game_time, longest_game);
+        if(mapGetSize(getGames(current_tournament)) != 0){
+            calculateTournamentStatistics(current_tournament, average_game_time, longest_game);
+        }
         fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d",
                 getWinnerId(current_tournament), *longest_game, *average_game_time, getLocation(current_tournament),
                 mapGetSize(getGames(current_tournament)), mapGetSize(getPlayers(current_tournament)));
