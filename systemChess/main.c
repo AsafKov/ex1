@@ -23,8 +23,8 @@ struct chess_system_t {
 // Static Functions //
 static bool isValidID(int id);
 static bool isValidLocation(const char *location);
-static bool isValidMaxGame(int num);
-static bool isValidGameTime(int num);
+static bool isValidMaxGame(int gameLimit);
+static bool isValidGameTime(int time);
 static bool doesGameExists(ChessSystem chess, ChessTournament tournament, int first_player, int second_player,
                            bool was_first_removed, bool was_second_removed);
 static bool isMaxExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player,
