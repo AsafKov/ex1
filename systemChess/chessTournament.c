@@ -1,6 +1,4 @@
 #include "headers/chessTournament.h"
-#include <string.h>
-#include <stdio.h>
 
 struct chess_tournament_t {
     Map games;
