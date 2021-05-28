@@ -240,16 +240,16 @@ static bool doesGameExists(ChessSystem chess, ChessTournament tournament, int fi
         return false;
     }
     Map games = getGames(tournament);
-    ChessGame *current_game = NULL;
+    ChessGame current_game = NULL;
     MAP_FOREACH(MapKeyElement, iterator, games){
         current_game = mapGet(games, iterator);
         freeMapKey(iterator);
         if(current_game == NULL){
             break;
         }
-        if (getFirstPlayerId(*current_game) == first_player && getSecondPlayerId(*current_game) == second_player)
+        if (getFirstPlayerId(current_game) == first_player && getSecondPlayerId(current_game) == second_player)
             return true;
-        if (getFirstPlayerId(*current_game) == second_player && getSecondPlayerId(*current_game) == first_player)
+        if (getFirstPlayerId(current_game) == second_player && getSecondPlayerId(current_game) == first_player)
             return true;
     }
     return false;
@@ -401,8 +401,6 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         return CHESS_INVALID_PLAY_TIME;
     }
 
-
-
     //TODO: can we reset the games of a removed player regardless of the success of game creation?
     if (isMaxExceeded(chess, tournament_id, first_player, second_player, reset_first_player, reset_second_player)) {
         return CHESS_EXCEEDED_GAMES;
@@ -414,7 +412,7 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         return CHESS_OUT_OF_MEMORY;
     }
     MapResult map_result = mapPut(getGames(tournament), (MapKeyElement) &game_id,
-                                  (MapDataElement) &game);
+                                  (MapDataElement) game);
     result = convertMapResultToChessResult(map_result);
     if (result == CHESS_SUCCESS) {
         //TODO: SOMEHOW THE SAME PROFILE GETS UPDATED BOTH TIMES

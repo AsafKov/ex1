@@ -267,7 +267,6 @@ static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement
     if(temp_data == NULL){
         return MAP_OUT_OF_MEMORY;
     }
-    map->freeMapDataFunction(getData(dummy));
     setData(dummy, map->freeMapDataFunction ,temp_data);
     return MAP_SUCCESS;
 }
