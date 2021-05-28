@@ -14,7 +14,6 @@
 
 //TODO: What to do one memory allocation failure? destroy chess?
 
-// typedefs and structs //
 struct chess_system_t {
     Map tournaments;
     Map players;
@@ -22,36 +21,58 @@ struct chess_system_t {
 
 // Static Functions //
 static bool isValidID(int id);
+
 static bool isValidLocation(const char *location);
+
 static bool isValidMaxGame(int gameLimit);
+
 static bool isValidGameTime(int time);
+
 static bool doesGameExists(ChessSystem chess, ChessTournament tournament, int first_player, int second_player,
                            bool was_first_removed, bool was_second_removed);
+
 static bool isMaxExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player,
                           bool ignore_first_player_games, bool ignore_second_player_games);
+
 void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id);
+
 Player compareTournamentScores(Player current_player, int *current_highest, Player current_winner);
+
 void preformSwitcheroo(int *first_id, int *second_id, double *first_score, double *second_score);
+
 void maxSort(int *ids, double *scores, int size);
+
 void calculateTournamentStatistics(ChessTournament tournament, double *average_game_time, int *longest_game);
+
 bool haveTournamentsEnded(ChessSystem chess);
 
 // Chess Functions //
 ChessResult convertMapResultToChessResult(MapResult map_result);
+
 ChessTournament createTournament(int tournament_id, int max_games_per_player, const char *tournament_location);
+
 ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player);
+
 void updatePlayersStatistics(Map players, ChessGame game, int first_player_id, int second_player_id,
                              bool was_first_removed, bool was_second_removed);
+
 ChessResult chessAddPlayer(ChessSystem chess, ChessTournament tournament, int player_id);
 
 // mapCreate Functions //
 int compareMapKeys(MapKeyElement key1, MapKeyElement key2);
+
 void freeMapKey(MapKeyElement key);
+
 void freeMapData(MapDataElement data);
+
 MapDataElement copyMapKey(MapKeyElement key);
+
 void freeMapDataTournament(MapDataElement data);
+
 MapDataElement copyMapDataTournament(MapDataElement data);
+
 MapDataElement copyMapDataGame(MapDataElement data);
+
 MapDataElement copyMapDataPlayer(MapDataElement data);
 
 int compareMapKeys(MapKeyElement key1, MapKeyElement key2) {
@@ -63,15 +84,17 @@ int compareMapKeys(MapKeyElement key1, MapKeyElement key2) {
 void freeMapKey(MapKeyElement key) {
     free(key);
 }
+
 void freeMapData(MapDataElement data) {
     free(data);
 }
+
 MapDataElement copyMapKey(MapKeyElement key) {
     if (key == NULL) {
         return NULL;
     }
-    int *key_copy = (int*) malloc(sizeof(int));
-    if(key_copy == NULL){
+    int *key_copy = (int *) malloc(sizeof(int));
+    if (key_copy == NULL) {
         freeMapKey(key_copy);
         return NULL;
     }
@@ -87,7 +110,7 @@ MapDataElement copyMapDataTournament(MapDataElement data) {
     Map game_map = mapCreate(copyMapDataGame, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
     Map players_map = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey,
                                 compareMapKeys);
-    return copyTournament((ChessTournament)data, game_map, players_map);
+    return copyTournament((ChessTournament) data, game_map, players_map);
 }
 
 MapDataElement copyMapDataGame(MapDataElement data) {
@@ -98,25 +121,10 @@ MapDataElement copyMapDataPlayer(MapDataElement data) {
     return copyPlayer((Player) data);
 }
 
-/*
-MapDataElement copyMapDataPlayer(MapDataElement data) {
-    Player original = (Player)data;
-    Player player_copy = createEmptyPlayer();
-    Player *original_pnt = original;
-    Player *copy_pnt = &player_copy;
-    *copy_pnt = *original_pnt;
-    if(player_copy == NULL){
-        return NULL;
-    }
-    return (MapDataElement)player_copy;
-}
-*/
-// Static Functions //
-
 /**
  * Check if id is valid
  * @param id
- * @return true if non-negative, false othewise
+ * @return true if non-negative, false otherwise
  */
 static bool isValidID(int id) {
     if (id < 0)
@@ -130,18 +138,18 @@ static bool isValidID(int id) {
  * @return true if follows the defined conditions, false otherwise
  */
 static bool isValidLocation(const char *location) {
-    if (location == NULL){
+    if (location == NULL) {
         return false;
     }
 
     //check if first letter is capital
-    if (*location > 'Z' || *location < 'A'){
+    if (*location > 'Z' || *location < 'A') {
         return false;
     }
     location++;
     while (*location) {
         //check if remaining letters are a-z or space
-        if (*location != ' ' && (*location < 'a' || *location > 'z')){
+        if (*location != ' ' && (*location < 'a' || *location > 'z')) {
             return false;
         }
         location++;
@@ -184,15 +192,15 @@ static bool isValidGameTime(int time) {
 static bool doesGameExists(ChessSystem chess, ChessTournament tournament, int first_player, int second_player,
                            bool was_first_removed, bool was_second_removed) {
     assert(tournament != NULL && chess != NULL);
-    if(was_first_removed || was_second_removed){
+    if (was_first_removed || was_second_removed) {
         return false;
     }
     Map games = getGames(tournament);
     ChessGame current_game = NULL;
-    MAP_FOREACH(MapKeyElement, iterator, games){
+    MAP_FOREACH(MapKeyElement, iterator, games) {
         current_game = mapGet(games, iterator);
         freeMapKey(iterator);
-        if(current_game == NULL){
+        if (current_game == NULL) {
             continue;
         }
         if (getFirstPlayerId(current_game) == first_player && getSecondPlayerId(current_game) == second_player)
@@ -216,7 +224,7 @@ static bool doesGameExists(ChessSystem chess, ChessTournament tournament, int fi
 static bool isMaxExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player,
                           bool ignore_first_player_games, bool ignore_second_player_games) {
     assert(chess != NULL);
-    ChessTournament current_tournament = mapGet(chess->tournaments,(MapKeyElement) &tournament_id);
+    ChessTournament current_tournament = mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
     if (current_tournament == NULL) {
         return false;
     }
@@ -238,16 +246,16 @@ ChessSystem chessCreate() {
         chessDestroy(chess);
         return NULL;
     }
-    Map tournaments =mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament, freeMapKey,
-                              compareMapKeys);
-    if(tournaments == NULL){
+    Map tournaments = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament, freeMapKey,
+                                compareMapKeys);
+    if (tournaments == NULL) {
         mapDestroy(tournaments);
         chessDestroy(chess);
         return NULL;
     }
     Map players = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey,
                             compareMapKeys);
-    if(players == NULL){
+    if (players == NULL) {
         mapDestroy(tournaments);
         mapDestroy(players);
         chessDestroy(chess);
@@ -289,18 +297,18 @@ ChessResult convertMapResultToChessResult(MapResult map_result) {
  */
 ChessTournament createTournament(int tournament_id, int max_games_per_player, const char *tournament_location) {
     ChessTournament tournament = createChessTournament(tournament_id, max_games_per_player, tournament_location);
-    if(tournament == NULL){
+    if (tournament == NULL) {
         freeTournament(tournament);
         return NULL;
     }
     Map games = mapCreate(copyMapDataGame, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
-    if(games == NULL){
+    if (games == NULL) {
         mapDestroy(games);
         freeTournament(tournament);
         return NULL;
     }
     Map players = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
-    if(players == NULL){
+    if (players == NULL) {
         mapDestroy(games);
         mapDestroy(players);
         freeTournament(tournament);
@@ -311,7 +319,8 @@ ChessTournament createTournament(int tournament_id, int max_games_per_player, co
     return tournament;
 }
 
-ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_player, const char *tournament_location) {
+ChessResult
+chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_player, const char *tournament_location) {
     if (chess == NULL || tournament_location == NULL)
         return CHESS_NULL_ARGUMENT;
     if (!isValidID(tournament_id))
@@ -324,24 +333,24 @@ ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_gam
         return CHESS_INVALID_MAX_GAMES;
 
     ChessTournament tournament = createTournament(tournament_id, max_games_per_player,
-                                                  (const char *) &tournament_location);
+                                                   tournament_location);
     if (tournament == NULL) {
         freeTournament(tournament);
         return CHESS_OUT_OF_MEMORY;
     }
     Map tournaments_map = NULL;
-    if(chess->tournaments == NULL){
+    if (chess->tournaments == NULL) {
         tournaments_map = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament,
-                                freeMapKey, compareMapKeys);
-        if(tournaments_map == NULL){
+                                    freeMapKey, compareMapKeys);
+        if (tournaments_map == NULL) {
             freeTournament(tournament);
             mapDestroy(tournaments_map);
             return CHESS_OUT_OF_MEMORY;
         }
         chess->tournaments = tournaments_map;
     }
-    MapResult map_result = mapPut(chess->tournaments, (MapKeyElement)&tournament_id,
-                                  (MapDataElement)tournament);
+    MapResult map_result = mapPut(chess->tournaments, (MapKeyElement) &tournament_id,
+                                  (MapDataElement) tournament);
     ChessResult chess_result = convertMapResultToChessResult(map_result);
     freeTournament(tournament);
     return chess_result;
@@ -371,24 +380,24 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
 
     bool reset_first_player = false, reset_second_player = false;
     Player first_player_profile = mapGet(getPlayers(tournament), &first_player);
-    if(first_player_profile == NULL){
+    if (first_player_profile == NULL) {
         result = chessAddPlayer(chess, tournament, first_player);
-        if(result != CHESS_SUCCESS){
+        if (result != CHESS_SUCCESS) {
             return result;
         }
-    } else{
-        if(isRemoved(first_player_profile)){
+    } else {
+        if (isRemoved(first_player_profile)) {
             reset_first_player = true;
         }
     }
     Player second_player_profile = mapGet(getPlayers(tournament), &second_player);
-    if(second_player_profile == NULL){
+    if (second_player_profile == NULL) {
         result = chessAddPlayer(chess, tournament, second_player);
-        if(result != CHESS_SUCCESS){
+        if (result != CHESS_SUCCESS) {
             return result;
         }
-    } else{
-        if(isRemoved(second_player_profile)){
+    } else {
+        if (isRemoved(second_player_profile)) {
             reset_second_player = true;
         }
     }
@@ -427,18 +436,18 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
         return CHESS_NULL_ARGUMENT;
     if (!isValidID(tournament_id))
         return CHESS_INVALID_ID;
-    ChessTournament tournament = mapGet(chess->tournaments, (MapKeyElement)&tournament_id);
-    if(tournament == NULL){
+    ChessTournament tournament = mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
+    if (tournament == NULL) {
         return CHESS_TOURNAMENT_NOT_EXIST;
     }
     Map players = getPlayers(tournament);
     Player tournament_profile = NULL;
     Player system_profile = NULL;
-    MAP_FOREACH(MapKeyElement, iterator, players){
-        tournament_profile = mapGet(players, (MapKeyElement)iterator);
-        system_profile = mapGet(chess->players, (MapKeyElement)iterator);
+    MAP_FOREACH(MapKeyElement, iterator, players) {
+        tournament_profile = mapGet(players, (MapKeyElement) iterator);
+        system_profile = mapGet(chess->players, (MapKeyElement) iterator);
         freeMapKey(iterator);
-        if(tournament_profile == NULL || system_profile == NULL){
+        if (tournament_profile == NULL || system_profile == NULL) {
             break;
         }
         updateDraws(system_profile, -getNumOfDraws(tournament_profile));
@@ -446,7 +455,7 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
         updateWins(system_profile, -getNumOfWins(tournament_profile));
         updatePlayerPlayTime(system_profile, -getPlayerPlayTime(tournament_profile));
     }
-    mapRemove(chess->tournaments, (MapKeyElement)&tournament_id);
+    mapRemove(chess->tournaments, (MapKeyElement) &tournament_id);
     return CHESS_SUCCESS;
 }
 
@@ -456,26 +465,26 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
  * @param game - game to update
  * @param player_id - removed player id
  */
-void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id){
+void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id) {
     int first_player_id = getFirstPlayerId(game);
     int second_player_id = getSecondPlayerId(game);
     Player first_player = mapGet(chess->players, &first_player_id);
     Player second_player = mapGet(chess->players, &second_player_id);
     //TODO: We update the game but not the players? Should reset time played? scores? games played?
-    if(first_player == NULL || second_player == NULL){
+    if (first_player == NULL || second_player == NULL) {
         return;
     }
-    if(first_player_id == player_id){
-        if(isRemoved(second_player)){
+    if (first_player_id == player_id) {
+        if (isRemoved(second_player)) {
             setGameWinner(game, DRAW);
-        } else{
+        } else {
             setGameWinner(game, SECOND_PLAYER);
         }
     }
-    if(second_player_id == player_id){
-        if(isRemoved(first_player)){
+    if (second_player_id == player_id) {
+        if (isRemoved(first_player)) {
             setGameWinner(game, DRAW);
-        } else{
+        } else {
             setGameWinner(game, FIRST_PLAYER);
         }
     }
@@ -496,22 +505,22 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
     Map games = NULL;
     Map players = NULL;
     Player tournament_profile;
-    MAP_FOREACH(MapKeyElement, iterator, chess->tournaments){
+    MAP_FOREACH(MapKeyElement, iterator, chess->tournaments) {
         current_tournament = mapGet(chess->tournaments, (MapKeyElement) iterator);
         freeMapKey(iterator);
-        if(current_tournament == NULL){
+        if (current_tournament == NULL) {
             break;
         }
         players = getPlayers(current_tournament);
         tournament_profile = mapGet(players, &player_id);
-        if(tournament_profile != NULL){
+        if (tournament_profile != NULL) {
             setIsRemoved(tournament_profile, true);
         }
         games = getGames(current_tournament);
-        MAP_FOREACH(MapKeyElement, gamesIterator, games){
+        MAP_FOREACH(MapKeyElement, gamesIterator, games) {
             current_game = mapGet(games, gamesIterator);
             freeMapKey(gamesIterator);
-            if(current_game == NULL){
+            if (current_game == NULL) {
                 break;
             }
             updateGameStatistics(chess, current_game, player_id);
@@ -525,13 +534,13 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id) {
         return CHESS_NULL_ARGUMENT;
     if (!isValidID(player_id))
         return CHESS_INVALID_ID;
-    if (!mapContains(chess->players, (MapKeyElement) &player_id)){
+    if (!mapContains(chess->players, (MapKeyElement) &player_id)) {
         return CHESS_PLAYER_NOT_EXIST;
     }
-    Player player = mapGet(chess->players, (MapKeyElement)&player_id);
+    Player player = mapGet(chess->players, (MapKeyElement) &player_id);
     ChessResult result = CHESS_SUCCESS;
-    if(player != NULL){
-        if(isRemoved(player)){
+    if (player != NULL) {
+        if (isRemoved(player)) {
             return CHESS_PLAYER_NOT_EXIST;
         }
         setIsRemoved(player, true);
@@ -558,21 +567,21 @@ void updatePlayersStatistics(Map players, ChessGame game, int first_player, int 
         updateWins(first_player_profile, 1);
         updateLosses(second_player_profile, 1);
     } else {
-        if(getWinner(game) == SECOND_PLAYER){
+        if (getWinner(game) == SECOND_PLAYER) {
             updateWins(second_player_profile, 1);
             updateLosses(first_player_profile, 1);
-        } else{
+        } else {
             updateDraws(first_player_profile, 1);
             updateDraws(second_player_profile, 1);
         }
     }
 
     //TODO: should also reset time?
-    if(was_first_removed){
+    if (was_first_removed) {
         resetGamesPlayed(first_player_profile);
         setIsRemoved(first_player_profile, false);
     }
-    if(was_second_removed){
+    if (was_second_removed) {
         resetGamesPlayed(second_player_profile);
         setIsRemoved(second_player_profile, false);
     }
@@ -589,39 +598,39 @@ void updatePlayersStatistics(Map players, ChessGame game, int first_player, int 
  * @param player_id
  * @return CHESS_OUT_OF_MEMORY if there was a memory allocation failure, CHESS_SUCCESS otherwise
  */
-ChessResult chessAddPlayer(ChessSystem  chess, ChessTournament tournament, int player_id) {
+ChessResult chessAddPlayer(ChessSystem chess, ChessTournament tournament, int player_id) {
     ChessResult result;
     Player player = createPlayer(player_id);
-    if(player == NULL){
+    if (player == NULL) {
         freeMapData(player);
         return CHESS_OUT_OF_MEMORY;
     }
-    if(!mapContains(chess->players, &player_id)){
+    if (!mapContains(chess->players, &player_id)) {
         result = convertMapResultToChessResult(mapPut(chess->players, (MapKeyElement) &player_id,
-                                                      (MapDataElement)player));
-        if(result == CHESS_OUT_OF_MEMORY){
+                                                      (MapDataElement) player));
+        if (result == CHESS_OUT_OF_MEMORY) {
             freeMapData(player);
             return result;
         }
     }
     result = convertMapResultToChessResult(mapPut(getPlayers(tournament), (MapKeyElement) &player_id,
-                                                  (MapDataElement)player));
+                                                  (MapDataElement) player));
     freeMapData(player);
     return result;
 }
 
 ChessResult chessEndTournament(ChessSystem chess, int tournament_id) {
-    if (chess == NULL){
+    if (chess == NULL) {
         return CHESS_NULL_ARGUMENT;
     }
-    if (!isValidID(tournament_id)){
+    if (!isValidID(tournament_id)) {
         return CHESS_INVALID_ID;
     }
-    if (!mapContains(chess->tournaments, (MapKeyElement) &tournament_id)){
+    if (!mapContains(chess->tournaments, (MapKeyElement) &tournament_id)) {
         return CHESS_TOURNAMENT_NOT_EXIST;
     }
     ChessTournament tournament = mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
-    if (hasEnded(tournament)){
+    if (hasEnded(tournament)) {
         return CHESS_TOURNAMENT_ENDED;
     }
 
@@ -633,20 +642,20 @@ ChessResult chessEndTournament(ChessSystem chess, int tournament_id) {
     Player current_player;
     Player current_winner = NULL;
     int *highest_score = malloc(sizeof(int));
-    if(highest_score == NULL){
+    if (highest_score == NULL) {
         free(highest_score);
         return CHESS_OUT_OF_MEMORY;
     }
     *highest_score = -1;
-    MAP_FOREACH(MapKeyElement, playersIterator, players){
+    MAP_FOREACH(MapKeyElement, playersIterator, players) {
         current_player = mapGet(players, (MapKeyElement) playersIterator);
         freeMapKey(playersIterator);
-        if(current_player == NULL || isRemoved(current_player)){
+        if (current_player == NULL || isRemoved(current_player)) {
             continue;
         }
         current_winner = compareTournamentScores(current_player, highest_score, current_winner);
     }
-    if(current_winner != NULL){
+    if (current_winner != NULL) {
         setTournamentWinner(tournament, getPlayerId(current_winner));
     }
     free(highest_score);
@@ -660,7 +669,7 @@ ChessResult chessEndTournament(ChessSystem chess, int tournament_id) {
  * @param current_highest - Current best tournament score
  * @param current_winner  - Player we compare to
  */
-Player compareTournamentScores(Player current_player, int *current_highest, Player current_winner){
+Player compareTournamentScores(Player current_player, int *current_highest, Player current_winner) {
     int current_score = (getNumOfWins(current_player)) * TOURNAMENT_SCORE_WINS_WEIGHT + getNumOfDraws(current_player);
     if (current_score > *current_highest) {
         *current_highest = current_score;
@@ -684,7 +693,7 @@ double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResu
         *chess_result = CHESS_NULL_ARGUMENT;
         return 0;
     }
-    if(!isValidID(player_id)){
+    if (!isValidID(player_id)) {
         *chess_result = CHESS_INVALID_ID;
         return 0;
     }
@@ -693,13 +702,13 @@ double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResu
         *chess_result = CHESS_PLAYER_NOT_EXIST;
         return 0;
     }
-    if(player == NULL){
+    if (player == NULL) {
         *chess_result = CHESS_OUT_OF_MEMORY;
         return 0;
     }
     double games_played = getNumOfWins(player) + getNumOfDraws(player) + getNumOfLosses(player);
     double total_time = getPlayerPlayTime(player);
-    double average_time = total_time/games_played;
+    double average_time = total_time / games_played;
     *chess_result = CHESS_SUCCESS;
     return average_time;
 }
@@ -710,14 +719,14 @@ double calculatePlayerLevel(Player player) {
     double losses = getNumOfLosses(player);
     double total_games = wins + draws + losses;
     double score = LEVEL_WINS_WEIGHT * wins + LEVEL_DRAWS_WEIGHT * draws + LEVEL_LOSSES_WEIGHT * losses;
-    return score/total_games;
+    return score / total_games;
 }
 
 ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
     if (chess == NULL) {
         return CHESS_NULL_ARGUMENT;
     }
-    if(file == NULL){
+    if (file == NULL) {
         return CHESS_SAVE_FAILURE;
     }
 
@@ -725,12 +734,12 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
     Player current_player;
 
     int *ids = malloc(sizeof(int) * (unsigned int) mapGetSize(players));
-    if(ids == NULL){
+    if (ids == NULL) {
         free(ids);
         return CHESS_OUT_OF_MEMORY;
     }
     double *scores = malloc(sizeof(double) * (unsigned int) mapGetSize(players));
-    if(scores == NULL){
+    if (scores == NULL) {
         free(ids);
         free(scores);
         return CHESS_OUT_OF_MEMORY;
@@ -739,10 +748,10 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
     double level;
 
     // For every index, put the id of current_player in ids[index] and his score in scores[index]
-    MAP_FOREACH(MapKeyElement, playerIterator, players){
+    MAP_FOREACH(MapKeyElement, playerIterator, players) {
         current_player = mapGet(players, playerIterator);
         freeMapKey(playerIterator);
-        if(current_player == NULL || isRemoved(current_player)){
+        if (current_player == NULL || isRemoved(current_player)) {
             continue;
         }
         level = calculatePlayerLevel(current_player);
@@ -752,13 +761,13 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
     }
 
     // If the array isn't fully initialized, mark the first uninitialized id in (-1) for the maxSort function
-    if(index < mapGetSize(players)-1){
+    if (index < mapGetSize(players) - 1) {
         ids[index] = -1;
     }
     maxSort(ids, scores, index);
 
-    for(int i=0; i<index; i++){
-        fprintf(file,"%d %.2f\n", ids[i], scores[i]);
+    for (int i = 0; i < index; i++) {
+        fprintf(file, "%d %.2f\n", ids[i], scores[i]);
     }
     free(ids);
     free(scores);
@@ -774,10 +783,10 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
  * @param scores - Players scores
  * @param size - Total players we sort for (may be lower than size of ids)
  */
-void maxSort(int *ids, double *scores, int size){
+void maxSort(int *ids, double *scores, int size) {
     int sorted = 0;
-    while(sorted < size && ids[sorted] != -1) {
-        for (int i = 0; i < size - sorted -1 && ids[i+1] != -1; i++) {
+    while (sorted < size && ids[sorted] != -1) {
+        for (int i = 0; i < size - sorted - 1 && ids[i + 1] != -1; i++) {
             if (scores[i] < scores[i + 1]) {
                 preformSwitcheroo(&ids[i], &ids[i + 1], &scores[i], &scores[i + 1]);
                 continue;
@@ -798,7 +807,7 @@ void maxSort(int *ids, double *scores, int size){
  * @param first_score - first score
  * @param second_score - second score
  */
-void preformSwitcheroo(int *first_id, int *second_id, double *first_score, double *second_score){
+void preformSwitcheroo(int *first_id, int *second_id, double *first_score, double *second_score) {
     int dummy_id = *first_id;
     *first_id = *second_id;
     *second_id = dummy_id;
@@ -809,43 +818,43 @@ void preformSwitcheroo(int *first_id, int *second_id, double *first_score, doubl
 }
 
 ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
-    if (chess == NULL || path_file == NULL){
+    if (chess == NULL || path_file == NULL) {
         return CHESS_NULL_ARGUMENT;
     }
 
-    if(!haveTournamentsEnded(chess)){
+    if (!haveTournamentsEnded(chess)) {
         return CHESS_NO_TOURNAMENTS_ENDED;
     }
 
-    FILE *tournament_statistics =  fopen((const char *) path_file, "w");
-    if(tournament_statistics == NULL){
+    FILE *tournament_statistics = fopen((const char *) path_file, "w");
+    if (tournament_statistics == NULL) {
         fclose(tournament_statistics);
         return CHESS_SAVE_FAILURE;
     }
     Map tournaments = chess->tournaments;
     ChessTournament current_tournament;
     double *average_game_time = malloc(sizeof(double));
-    if(average_game_time == NULL){
+    if (average_game_time == NULL) {
         fclose(tournament_statistics);
         free(average_game_time);
         return CHESS_OUT_OF_MEMORY;
     }
     int *longest_game = malloc(sizeof(int));
-    if(longest_game == NULL){
+    if (longest_game == NULL) {
         fclose(tournament_statistics);
         free(longest_game);
         free(average_game_time);
         return CHESS_OUT_OF_MEMORY;
     }
-    MAP_FOREACH(MapKeyElement, tournamentsIterator, tournaments){
+    MAP_FOREACH(MapKeyElement, tournamentsIterator, tournaments) {
         current_tournament = mapGet(tournaments, tournamentsIterator);
         freeMapKey(tournamentsIterator);
-        if(current_tournament == NULL || !hasEnded(current_tournament)){
+        if (current_tournament == NULL || !hasEnded(current_tournament)) {
             continue;
         }
         *average_game_time = 0;
         *longest_game = 0;
-        if(mapGetSize(getGames(current_tournament)) != 0){
+        if (mapGetSize(getGames(current_tournament)) != 0) {
             calculateTournamentStatistics(current_tournament, average_game_time, longest_game);
         }
         fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d",
@@ -864,16 +873,16 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
  * @param chess - Chess system which holds the tournaments
  * @return True - at least one tournament has ended, False - All tournaments are ongoing
  */
-bool haveTournamentsEnded(ChessSystem chess){
+bool haveTournamentsEnded(ChessSystem chess) {
     ChessTournament current_tournament;
-    MAP_FOREACH(MapKeyElement, tournamentsIterator, chess->tournaments){
+    MAP_FOREACH(MapKeyElement, tournamentsIterator, chess->tournaments) {
         current_tournament = mapGet(chess->tournaments, tournamentsIterator);
         free(tournamentsIterator);
-        if(current_tournament == NULL){
+        if (current_tournament == NULL) {
             //TODO: should even address this?
             continue;
         }
-        if(hasEnded(current_tournament)){
+        if (hasEnded(current_tournament)) {
             return true;
         }
     }
@@ -886,18 +895,18 @@ bool haveTournamentsEnded(ChessSystem chess){
  * @param average_game_time - The average game duration will be inserted here
  * @param longest_game - The longest game duration will be inserted here
  */
-void calculateTournamentStatistics(ChessTournament tournament, double *average_game_time, int *longest_game){
+void calculateTournamentStatistics(ChessTournament tournament, double *average_game_time, int *longest_game) {
     Map games = getGames(tournament);
     ChessGame current_game;
     int total_games = 0;
-    MAP_FOREACH(MapKeyElement, gamesIterator, games){
+    MAP_FOREACH(MapKeyElement, gamesIterator, games) {
         current_game = mapGet(games, gamesIterator);
         freeMapKey(gamesIterator);
-        if(current_game == NULL){
+        if (current_game == NULL) {
             //TODO: should even address this?
             continue;
         }
-        if(getDuration(current_game) > *longest_game){
+        if (getDuration(current_game) > *longest_game) {
             *longest_game = getDuration(current_game);
         }
         *average_game_time += getDuration(current_game);

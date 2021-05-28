@@ -23,7 +23,7 @@ char* foo(char* str, int* x) {
     int i;
     // should check if str is not NULL (not handled by strlen())
     x = strlen(str); // should be *x
-    str2 = malloc(*x); //should be *x * (sizeof(char) + 1
+    str2 = malloc(*x); //should be (unsigned int)*x * (sizeof(char) + 1
     // Missing memory allocation check
     // Should set last char to be '\0'
     for (i = 0; i < *x; i++) //missing brackets?
@@ -50,7 +50,6 @@ char* fooFixed(char* str, int* x) {
     int i;
     // should check if str is not NULL (not handled by strlen())
     *x = (int) strlen(str); // should be *x
-    printf("%d\n",*x);
     str2 = malloc((unsigned)*x * sizeof(char) +1); //should be *x * (sizeof(char)
     // Missing memory allocation check
     if(str2 == NULL){
