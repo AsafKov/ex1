@@ -10,8 +10,6 @@ static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement
 MapResult addNewValues(Map map, MapKeyElement keyElement, MapDataElement dataElement);
 static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyElement key);
 
-//TODO: use FOREACH\iterator function instead of getNext?
-
 struct Map_t {
     copyMapDataElements copyDataFunction;
     copyMapKeyElements copyMapKeyFunction;
@@ -19,7 +17,7 @@ struct Map_t {
     freeMapKeyElements freeMapKeyFunction;
     compareMapKeyElements compareMapKeyFunction;
     Node elements;
-    Node pointer;
+    Node iterator;
     int size;
 };
 
@@ -43,7 +41,7 @@ Map mapCreate(copyMapDataElements copyDataElement,
     map->freeMapKeyFunction = freeKeyElement;
     map->compareMapKeyFunction = compareKeyElements;
     map->elements = NULL;
-    map->pointer = NULL;
+    map->iterator = NULL;
 
     map->size = 0;
     return map;
@@ -59,7 +57,7 @@ MapResult mapClear(Map map){
     if(map == NULL){
         return MAP_NULL_ARGUMENT;
     }
-    map->pointer = NULL;
+    map->iterator = NULL;
     Node dummy;
     while(map->elements != NULL){
         map->freeMapKeyFunction(getKey(map->elements));
@@ -280,8 +278,8 @@ static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement
 MapKeyElement mapGetFirst(Map map){
     if(map == NULL || map->size == 0)
         return NULL;
-    map->pointer = map->elements;
-    MapKeyElement key = map->copyMapKeyFunction((MapKeyElement)getKey(map->pointer));
+    map->iterator = map->elements;
+    MapKeyElement key = map->copyMapKeyFunction((MapKeyElement)getKey(map->iterator));
     return key;
 }
 
@@ -289,6 +287,7 @@ MapDataElement mapGet(Map map, MapKeyElement keyElement){
     if(map == NULL || map->size == 0 || !mapContains(map, keyElement)) {
         return NULL;
     }
+
     Node dummy = map->elements;
     int compareResult = map->compareMapKeyFunction(keyElement, getKey(dummy));
     while(getNext(dummy) != NULL && compareResult != 0){
@@ -302,14 +301,14 @@ MapDataElement mapGet(Map map, MapKeyElement keyElement){
 }
 
 MapKeyElement mapGetNext(Map map){
-    if(map == NULL || map->pointer == NULL || getNext(map->pointer) == NULL){
+    if(map == NULL || map->iterator == NULL || getNext(map->iterator) == NULL){
         return NULL;
     }
-    Node next = getNext(map->pointer);
+    Node next = getNext(map->iterator);
     if(next == NULL){
         return NULL;
     }
-    map->pointer = next;
-    MapKeyElement key = getKey(map->pointer);
+    map->iterator = next;
+    MapKeyElement key = getKey(map->iterator);
     return map->copyMapKeyFunction(key);
 }
