@@ -34,6 +34,7 @@ Map mapCreate(copyMapDataElements copyDataElement,
     }
     Map map = malloc(sizeof(*map));
     if(map == NULL){
+        free(map);
         return NULL;
     }
     map->copyDataFunction = copyDataElement;
@@ -42,6 +43,7 @@ Map mapCreate(copyMapDataElements copyDataElement,
     map->freeMapKeyFunction = freeKeyElement;
     map->compareMapKeyFunction = compareKeyElements;
     map->elements = NULL;
+    map->pointer = NULL;
 
     map->size = 0;
     return map;
@@ -103,6 +105,7 @@ Map mapCopy(Map map){
                              map->freeMapDataFunction, map->freeMapKeyFunction,
                              map->compareMapKeyFunction);
     if(map_copy == NULL){
+        mapDestroy(map_copy);
         return NULL;
     }
 
@@ -114,7 +117,7 @@ Map mapCopy(Map map){
     }
     map_copy->elements = createEmptyNode();
     if(map_copy->elements == NULL){
-        free(map_copy);
+        mapDestroy(map_copy);
         return NULL;
     }
     if(map->size == 0){
@@ -235,11 +238,13 @@ static MapResult initializeNode(Map map, Node node, MapDataElement data, MapKeyE
     }
     MapKeyElement new_key = map->copyMapKeyFunction(key);
     if(new_key == NULL){
+        map->freeMapKeyFunction(new_key);
         return MAP_OUT_OF_MEMORY;
     }
     MapDataElement new_data = map->copyDataFunction(data);
     if(new_data == NULL){
-        map->freeMapKeyFunction(new_data);
+        map->freeMapKeyFunction(new_key);
+        map->freeMapDataFunction(new_data);
         return MAP_OUT_OF_MEMORY;
     }
     setKey(node, new_key);
@@ -265,6 +270,7 @@ static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement
     }
     MapDataElement temp_data = map->copyDataFunction(dataElement);
     if(temp_data == NULL){
+        map->freeMapDataFunction(temp_data);
         return MAP_OUT_OF_MEMORY;
     }
     setData(dummy, map->freeMapDataFunction ,temp_data);
@@ -275,7 +281,8 @@ MapKeyElement mapGetFirst(Map map){
     if(map == NULL || map->size == 0)
         return NULL;
     map->pointer = map->elements;
-    return map->copyMapKeyFunction((MapKeyElement)getKey(map->pointer));
+    MapKeyElement key = map->copyMapKeyFunction((MapKeyElement)getKey(map->pointer));
+    return key;
 }
 
 MapDataElement mapGet(Map map, MapKeyElement keyElement){
@@ -298,6 +305,11 @@ MapKeyElement mapGetNext(Map map){
     if(map == NULL || map->pointer == NULL || getNext(map->pointer) == NULL){
         return NULL;
     }
-    map->pointer = getNext(map->pointer);
-    return map->copyMapKeyFunction(getKey(map->pointer));
+    Node next = getNext(map->pointer);
+    if(next == NULL){
+        return NULL;
+    }
+    map->pointer = next;
+    MapKeyElement key = getKey(map->pointer);
+    return map->copyMapKeyFunction(key);
 }

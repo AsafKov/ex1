@@ -15,14 +15,20 @@ struct chess_tournament_t {
 // creates new empty tournament
 ChessTournament createEmptyTournament(){
     ChessTournament tournament = (ChessTournament) malloc(sizeof(struct chess_tournament_t));
+    if(tournament == NULL){
+        freeTournament(tournament);
+        return NULL;
+    }
     return tournament;
 }
 
 //creates new tournament
 ChessTournament createChessTournament(int tournament_id, int max_games_per_player, const char *tournament_location) {
     ChessTournament tournament = (ChessTournament) malloc(sizeof(*tournament));
-    if (tournament == NULL)
+    if(tournament == NULL){
+        freeTournament(tournament);
         return NULL;
+    }
     tournament->id = tournament_id;
     tournament->tournament_location = tournament_location;
     tournament->tournament_winner = -1;
@@ -96,7 +102,8 @@ ChessTournament copyTournament(ChessTournament data, Map game_map, Map players_m
         return NULL;
     }
     ChessTournament tournament = createEmptyTournament();
-    if (tournament == NULL) {
+    if(tournament == NULL){
+        freeTournament(tournament);
         return NULL;
     }
     tournament->id = data->id ;
@@ -111,10 +118,16 @@ ChessTournament copyTournament(ChessTournament data, Map game_map, Map players_m
         mapDestroy(game_map);
         tournament->games =  mapCopy(games);
         if (tournament->games == NULL) {
+            mapDestroy(tournament->games);
             free(tournament);
             return NULL;
         }
     } else {
+        if(game_map == NULL){
+            freeTournament(tournament);
+            mapDestroy(game_map);
+            return NULL;
+        }
         tournament->games = game_map;
     }
 
@@ -124,10 +137,16 @@ ChessTournament copyTournament(ChessTournament data, Map game_map, Map players_m
         tournament->players = mapCopy(players);
         if (tournament->players == NULL) {
             mapDestroy(getGames(tournament));
-            free(tournament);
+            freeTournament(tournament);
             return NULL;
         }
     } else {
+        if(players_map == NULL){
+            freeTournament(tournament);
+            mapDestroy(game_map);
+            mapDestroy(players_map);
+            return NULL;
+        }
         tournament->players = players_map;
     }
     return tournament;

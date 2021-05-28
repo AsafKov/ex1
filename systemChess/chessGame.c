@@ -11,6 +11,7 @@ struct chess_game_t {
 ChessGame createChessGame(int id, int first_player, int second_player, Winner winner, int duration){
     ChessGame game = (ChessGame)malloc(sizeof(struct chess_game_t));
     if(game == NULL){
+        free(game);
         return NULL;
     }
     game->game_id = id;
@@ -23,6 +24,10 @@ ChessGame createChessGame(int id, int first_player, int second_player, Winner wi
 
 ChessGame createEmptyChessGame(){
     ChessGame game = (ChessGame)malloc(sizeof(struct chess_game_t));
+    if(game == NULL){
+        free(game);
+        return NULL;
+    }
     return game;
 }
 

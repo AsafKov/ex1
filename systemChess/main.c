@@ -68,7 +68,11 @@ MapDataElement copyMapKey(MapKeyElement key) {
     if (key == NULL) {
         return NULL;
     }
-    int *key_copy = malloc(sizeof(int));
+    int *key_copy = (int*) malloc(sizeof(int));
+    if(key_copy == NULL){
+        freeMapKey(key_copy);
+        return NULL;
+    }
     *key_copy = *((int *) key);
     return key_copy;
 }
@@ -202,12 +206,26 @@ static bool isPlayerInSystem(ChessSystem chess, int player_id) {
 ChessSystem chessCreate() {
     ChessSystem chess = (ChessSystem) malloc(sizeof(struct chess_system_t));
     if (chess == NULL) {
+        chessDestroy(chess);
         return NULL;
     }
-    chess->tournaments = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament, freeMapKey,
-                                   compareMapKeys);
-    chess->players = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey,
-                               compareMapKeys);
+    Map tournaments =mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament, freeMapKey,
+                              compareMapKeys);
+    if(tournaments == NULL){
+        mapDestroy(tournaments);
+        chessDestroy(chess);
+        return NULL;
+    }
+    Map players = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey,
+                            compareMapKeys);
+    if(players == NULL){
+        mapDestroy(tournaments);
+        mapDestroy(players);
+        chessDestroy(chess);
+        return NULL;
+    }
+    chess->tournaments = tournaments;
+    chess->players = players;
     return chess;
 }
 
@@ -227,17 +245,31 @@ ChessResult convertMapResultToChessResult(MapResult map_result) {
         return CHESS_NULL_ARGUMENT;
     if (map_result == MAP_OUT_OF_MEMORY)
         return CHESS_OUT_OF_MEMORY;
-    return CHESS_SUCCESS; //only other option MAP_OUT_OF_MEMORY
+    return CHESS_SUCCESS;
 }
 
 //creates new tournament, to be added to chess system
 ChessTournament createTournament(int tournament_id, int max_games_per_player, const char *tournament_location) {
     ChessTournament tournament = createChessTournament(tournament_id, max_games_per_player, tournament_location);
     if(tournament == NULL){
+        freeTournament(tournament);
         return NULL;
     }
-    setGamesMap(tournament, mapCreate(copyMapDataGame, copyMapKey, freeMapData, freeMapKey, compareMapKeys));
-    setPlayersMap(tournament, mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey, compareMapKeys));
+    Map games = mapCreate(copyMapDataGame, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
+    if(games == NULL){
+        mapDestroy(games);
+        freeTournament(tournament);
+        return NULL;
+    }
+    Map players = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
+    if(players == NULL){
+        mapDestroy(games);
+        mapDestroy(players);
+        freeTournament(tournament);
+        return NULL;
+    }
+    setGamesMap(tournament, games);
+    setPlayersMap(tournament, players);
     return tournament;
 }
 
@@ -258,13 +290,22 @@ ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_gam
     if (tournament == NULL) {
         return CHESS_OUT_OF_MEMORY;
     }
+    Map tournaments_map = NULL;
     if(chess->tournaments == NULL){
-        chess->tournaments = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament,
-                                       freeMapKey, compareMapKeys);
+        tournaments_map = mapCreate(copyMapDataTournament, copyMapKey, freeMapDataTournament,
+                                freeMapKey, compareMapKeys);
+        if(tournaments_map == NULL){
+            freeTournament(tournament);
+            mapDestroy(tournaments_map);
+            return CHESS_OUT_OF_MEMORY;
+        }
+        chess->tournaments = tournaments_map;
     }
     MapResult map_result = mapPut(chess->tournaments, (MapKeyElement)&tournament_id,
-                                  (MapDataElement)tournament);//adding Tournament to chessSystem chess
-    return convertMapResultToChessResult(map_result);
+                                  (MapDataElement)tournament);
+    ChessResult chess_result = convertMapResultToChessResult(map_result);
+    freeTournament(tournament);
+    return chess_result;
 }
 
 
@@ -334,12 +375,12 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
                                   (MapDataElement) game);
     result = convertMapResultToChessResult(map_result);
     if (result == CHESS_SUCCESS) {
-        //TODO: SOMEHOW THE SAME PROFILE GETS UPDATED BOTH TIMES
         updatePlayersStatistics(getPlayers(tournament), game, first_player, second_player, reset_first_player,
                                 reset_second_player);
         updatePlayersStatistics(chess->players, game, first_player, second_player, reset_first_player,
                                 reset_second_player);
     }
+    freeMapData(game);
     return result;
 }
 
@@ -499,6 +540,7 @@ ChessResult chessAddPlayer(ChessSystem  chess, ChessTournament tournament, int p
         mapPut(chess->players, (MapKeyElement) &player_id, (MapDataElement)player);
     }
     mapPut(getPlayers(tournament), (MapKeyElement) &player_id, (MapDataElement)player);
+    freeMapData(player);
     return CHESS_SUCCESS;
 }
 
@@ -521,6 +563,10 @@ ChessResult chessEndTournament(ChessSystem chess, int tournament_id) {
     Player current_player;
     Player current_winner = NULL;
     int *highest_score = malloc(sizeof(int));
+    if(highest_score == NULL){
+        free(highest_score);
+        return CHESS_OUT_OF_MEMORY;
+    }
     *highest_score = -1;
     MAP_FOREACH(MapKeyElement, playersIterator, players){
         current_player = mapGet(players, (MapKeyElement) playersIterator);
@@ -609,7 +655,16 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
     Player current_player;
 
     int *ids = malloc(sizeof(int) * (unsigned int) mapGetSize(players));
+    if(ids == NULL){
+        free(ids);
+        return CHESS_OUT_OF_MEMORY;
+    }
     double *scores = malloc(sizeof(double) * (unsigned int) mapGetSize(players));
+    if(scores == NULL){
+        free(ids);
+        free(scores);
+        return CHESS_OUT_OF_MEMORY;
+    }
     int index = 0;
     double level;
 
@@ -707,7 +762,16 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
     Map tournaments = chess->tournaments;
     ChessTournament current_tournament;
     double *average_game_time = malloc(sizeof(double));
+    if(average_game_time == NULL){
+        free(average_game_time);
+        return CHESS_OUT_OF_MEMORY;
+    }
     int *longest_game = malloc(sizeof(int));
+    if(longest_game == NULL){
+        free(longest_game);
+        free(average_game_time);
+        return CHESS_OUT_OF_MEMORY;
+    }
     MAP_FOREACH(MapKeyElement, tournamentsIterator, tournaments){
         current_tournament = mapGet(tournaments, tournamentsIterator);
         freeMapKey(tournamentsIterator);
@@ -738,6 +802,7 @@ bool haveTournamentsEnded(ChessSystem chess){
     ChessTournament current_tournament;
     MAP_FOREACH(MapKeyElement, tournamentsIterator, chess->tournaments){
         current_tournament = mapGet(chess->tournaments, tournamentsIterator);
+        free(tournamentsIterator);
         if(current_tournament == NULL){
             //TODO: should even address this?
             continue;

@@ -13,6 +13,7 @@ struct player {
 Player createPlayer(int id){
     Player player = malloc(sizeof(*player));
     if(player == NULL){
+        free(player);
         return NULL;
     }
     player->id = id;
@@ -27,6 +28,10 @@ Player createPlayer(int id){
 
 Player createEmptyPlayer(){
     Player player = (Player) malloc(sizeof(struct player));
+    if(player == NULL){
+        free(player);
+        return NULL;
+    }
     return player;
 }
 
@@ -116,6 +121,7 @@ Player copyPlayer(Player data) {
     }
     Player player = createEmptyPlayer();
     if (player == NULL) {
+        free(player);
         return NULL;
     }
     player->id = data->id;
@@ -125,8 +131,5 @@ Player copyPlayer(Player data) {
     player->losses = data->losses;
     player->is_removed = data->is_removed;
     player->play_time = data->play_time;
-    if(player == NULL){
-        return NULL;
-    }
     return player;
 }
