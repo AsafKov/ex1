@@ -21,30 +21,20 @@ struct chess_system_t {
 
 // Static Functions //
 static bool isValidID(int id);
-
 static bool isValidLocation(const char *location);
-
 static bool isValidMaxGame(int gameLimit);
-
 static bool isValidGameTime(int time);
-
 static bool doesGameExists(ChessSystem chess, ChessTournament tournament, int first_player, int second_player,
                            bool was_first_removed, bool was_second_removed);
-
 static bool isMaxExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player,
                           bool ignore_first_player_games, bool ignore_second_player_games);
+static bool haveTournamentsEnded(ChessSystem chess);
 
 void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id);
-
 Player compareTournamentScores(Player current_player, int *current_highest, Player current_winner);
-
 void preformSwitcheroo(int *first_id, int *second_id, double *first_score, double *second_score);
-
 void maxSort(int *ids, double *scores, int size);
-
 void calculateTournamentStatistics(ChessTournament tournament, double *average_game_time, int *longest_game);
-
-bool haveTournamentsEnded(ChessSystem chess);
 
 // Chess Functions //
 ChessResult convertMapResultToChessResult(MapResult map_result);
@@ -859,7 +849,7 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
         if (mapGetSize(getGames(current_tournament)) != 0) {
             calculateTournamentStatistics(current_tournament, average_game_time, longest_game);
         }
-        print_result = fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d",
+        print_result = fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d\n",
                 getWinnerId(current_tournament), *longest_game, *average_game_time, getLocation(current_tournament),
                 mapGetSize(getGames(current_tournament)), mapGetSize(getPlayers(current_tournament)));
         if(print_result < 0){
@@ -869,7 +859,6 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
             return CHESS_SAVE_FAILURE;
         }
     }
-
     fclose(tournament_statistics);
     free(longest_game);
     free(average_game_time);
