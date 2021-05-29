@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-
-
 typedef enum {
     CHESS_OUT_OF_MEMORY,
     CHESS_NULL_ARGUMENT,
@@ -196,7 +194,5 @@ ChessResult chessSavePlayersLevels (ChessSystem chess, FILE* file);
  *     CHESS_SUCCESS - if the ratings was printed successfully.
  */
 ChessResult chessSaveTournamentStatistics (ChessSystem chess, char* path_file);
-
-//TODO: REMOVE
 
 #endif //HW1_CHESSSYSTEM_H

@@ -87,26 +87,7 @@ void resetGamesPlayed(Player player){
     player->games_played = 0;
 }
 
-void setPlayerId(Player player, int id){
-    player->id = id;
-}
-
-void setGamesPlayed(Player player, int gamesPlayed){
-    player->games_played = gamesPlayed;
-}
-
-void setPlayerWins(Player player, int wins){
-    player->wins = wins;
-}
-
-void setPlayerDraws(Player player, int draws){
-    player->draws = draws;
-}
-
-void setPlayerLosses(Player player, int losses){
-    player->losses = losses;
-}
-
+//TODO: needed?
 void resetTimePlayed(Player player){
     player->play_time = 0;
 }

@@ -30,7 +30,7 @@ ChessTournament createChessTournament(int tournament_id, int max_games_per_playe
     }
     tournament->id = tournament_id;
     tournament->tournament_location = tournament_location;
-    tournament->tournament_winner = -1;
+    tournament->tournament_winner = NO_WINNER;
     tournament->max_games_per_player = max_games_per_player;
     tournament->has_ended = false;
     tournament->last_game_id = 0;
@@ -43,13 +43,6 @@ Map getGames(ChessTournament tournament){
 }
 Map getPlayers(ChessTournament tournament){
     return tournament->players;
-}
-int getTournamentId(ChessTournament tournament){
-    return tournament->id;
-}
-
-const char* getTournamentLocation(ChessTournament tournament){
-    return tournament->tournament_location;
 }
 
 int getLastGameId(ChessTournament tournament){

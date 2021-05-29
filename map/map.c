@@ -1,9 +1,6 @@
 #include "headers/node.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 //Defines
-//TODO: more defines?
 #define NULL_ARGUMENT_INDICATOR (-1)
 
 static MapResult reassignValue(Map map, MapKeyElement keyElement, MapDataElement dataElement);
