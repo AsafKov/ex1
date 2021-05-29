@@ -723,11 +723,8 @@ double calculatePlayerLevel(Player player) {
 }
 
 ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
-    if (chess == NULL) {
+    if (chess == NULL || file == NULL) {
         return CHESS_NULL_ARGUMENT;
-    }
-    if (file == NULL) {
-        return CHESS_SAVE_FAILURE;
     }
 
     Map players = chess->players;
@@ -767,7 +764,11 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
     maxSort(ids, scores, index);
 
     for (int i = 0; i < index; i++) {
-        fprintf(file, "%d %.2f\n", ids[i], scores[i]);
+        if(fprintf(file, "%d %.2f\n", ids[i], scores[i]) < 0){
+            free(ids);
+            free(scores);
+            return CHESS_SAVE_FAILURE;
+        }
     }
     free(ids);
     free(scores);
@@ -846,6 +847,7 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
         free(average_game_time);
         return CHESS_OUT_OF_MEMORY;
     }
+    int print_result;
     MAP_FOREACH(MapKeyElement, tournamentsIterator, tournaments) {
         current_tournament = mapGet(tournaments, tournamentsIterator);
         freeMapKey(tournamentsIterator);
@@ -857,9 +859,15 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
         if (mapGetSize(getGames(current_tournament)) != 0) {
             calculateTournamentStatistics(current_tournament, average_game_time, longest_game);
         }
-        fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d",
+        print_result = fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d",
                 getWinnerId(current_tournament), *longest_game, *average_game_time, getLocation(current_tournament),
                 mapGetSize(getGames(current_tournament)), mapGetSize(getPlayers(current_tournament)));
+        if(print_result < 0){
+            fclose(tournament_statistics);
+            free(longest_game);
+            free(average_game_time);
+            return CHESS_SAVE_FAILURE;
+        }
     }
 
     fclose(tournament_statistics);
