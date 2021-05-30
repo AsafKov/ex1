@@ -5,9 +5,9 @@
 
 typedef struct player *Player;
 
-Player createPlayer(int id);
+Player playerCreatePlayer(int id);
 
-Player createEmptyPlayer();
+Player playerCreateEmptyPlayer();
 
 int getPlayerId(Player player);
 

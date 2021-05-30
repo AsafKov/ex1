@@ -10,7 +10,7 @@ struct player {
     bool is_removed;
 };
 
-Player createPlayer(int id){
+Player playerCreatePlayer(int id){
     Player player = malloc(sizeof(*player));
     if(player == NULL){
         free(player);
@@ -26,7 +26,7 @@ Player createPlayer(int id){
     return player;
 }
 
-Player createEmptyPlayer(){
+Player playerCreateEmptyPlayer(){
     Player player = (Player) malloc(sizeof(struct player));
     if(player == NULL){
         free(player);
@@ -100,7 +100,7 @@ Player copyPlayer(Player data) {
     if (data == NULL) {
         return NULL;
     }
-    Player player = createEmptyPlayer();
+    Player player = playerCreateEmptyPlayer();
     if (player == NULL) {
         free(player);
         return NULL;
