@@ -116,9 +116,9 @@ MapDataElement copyMapDataPlayer(MapDataElement data) {
  * @return true if non-negative, false otherwise
  */
 static bool checkValidID(int id) {
-    if (id < 0)
-        return false;
-    return true;
+    if (id > 0)
+        return true;
+    return false;
 }
 
 /**
@@ -152,9 +152,9 @@ static bool checkValidLocation(const char *location) {
  * @return true if non-negative, false otherwise
  */
 static bool checkValidMaxGame(int gameLimit) {
-    if (gameLimit < 0)
-        return false;
-    return true;
+    if (gameLimit > 0)
+        return true;
+    return false;
 }
 
 /** Check if game has a valid duration
@@ -162,9 +162,9 @@ static bool checkValidMaxGame(int gameLimit) {
  * @return true if non-negative, false otherwise
  */
 static bool checkValidGameTime(int time) {
-    if (time < 0)
-        return false;
-    return true;
+    if (time >= 0)
+        return true;
+    return false;
 }
 
 
@@ -623,10 +623,10 @@ ChessResult chessEndTournament(ChessSystem chess, int tournament_id) {
         return CHESS_TOURNAMENT_ENDED;
     }
 
-    setHasEnded(tournament, true);
     if (mapGetSize(getGames(tournament)) == 0) {
         return CHESS_NO_GAMES;
     }
+    setHasEnded(tournament, true);
     Map players = getPlayers(tournament);
     Player current_player;
     Player current_winner = NULL;
