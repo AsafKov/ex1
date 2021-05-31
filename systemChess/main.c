@@ -695,9 +695,12 @@ double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResu
         *chess_result = CHESS_OUT_OF_MEMORY;
         return 0;
     }
-    double games_played = getNumOfWins(player) + getNumOfDraws(player) + getNumOfLosses(player);
+    double games_played = getNumOfGames(player);
     double total_time = getPlayerPlayTime(player);
-    double average_time = total_time / games_played;
+    double average_time=0;
+    if (games_played>0){
+         average_time= total_time / games_played;
+    }
     *chess_result = CHESS_SUCCESS;
     return average_time;
 }
