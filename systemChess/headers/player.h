@@ -19,6 +19,8 @@ int getNumOfDraws(Player player);
 
 int getNumOfLosses(Player player);
 
+void resetRemovedPlayerStatistics(Player player);
+
 bool isRemoved(Player player);
 
 int getPlayerPlayTime(Player player);

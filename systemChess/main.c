@@ -564,14 +564,11 @@ void updatePlayersStatistics(Map players, ChessGame game, int first_player, int 
             updateDraws(second_player_profile, 1);
         }
     }
-
     //TODO: should also reset time?
     if (was_first_removed) {
-        resetGamesPlayed(first_player_profile);
         setIsRemoved(first_player_profile, false);
     }
     if (was_second_removed) {
-        resetGamesPlayed(second_player_profile);
         setIsRemoved(second_player_profile, false);
     }
     updateGamesPlayed(first_player_profile);

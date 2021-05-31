@@ -81,15 +81,17 @@ void updateGamesPlayed(Player player){
 
 void setIsRemoved(Player player, bool isRemoved){
     player->is_removed = isRemoved;
+    if(isRemoved){
+        resetRemovedPlayerStatistics(player);
+    }
+}
+
+void resetRemovedPlayerStatistics(Player player){
     player->games_played=0;
     player->wins=0;
     player->draws=0;
     player->losses=0;
     player->play_time=0;
-}
-
-void resetGamesPlayed(Player player){
-    player->games_played = 0;
 }
 
 //TODO: needed?
