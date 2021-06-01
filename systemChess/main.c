@@ -486,7 +486,6 @@ void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id) {
  * @return
  */
 ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
-    //assert(chess!=NULL);
     int player_id = getPlayerId(player);
     ChessGame current_game = NULL;
     ChessTournament current_tournament = NULL;
@@ -503,6 +502,9 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
         tournament_profile = mapGet(players, &player_id);
         if (tournament_profile != NULL) {
             setIsRemoved(tournament_profile, true);
+        }
+        if(hasEnded(current_tournament)){
+           continue;
         }
         games = getGames(current_tournament);
         MAP_FOREACH(MapKeyElement, gamesIterator, games) {
@@ -694,7 +696,7 @@ double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResu
     double games_played = getNumOfGames(player);
     double total_time = getPlayerPlayTime(player);
     double average_time=0;
-    if (games_played>0){
+    if (games_played > 0){
         average_time= total_time / games_played;
     }
     *chess_result = CHESS_SUCCESS;
@@ -818,7 +820,7 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
     FILE *tournament_statistics = fopen((const char *) path_file, "w");
     if (tournament_statistics == NULL) {
         fclose(tournament_statistics);
-        return CHESS_SAVE_FAILURE;
+        return CHESS_OUT_OF_MEMORY;
     }
     Map tournaments = chess->tournaments;
     ChessTournament current_tournament;
