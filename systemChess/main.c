@@ -37,31 +37,20 @@ void calculateTournamentStatistics(ChessTournament tournament, double *average_g
 
 // Chess Functions //
 ChessResult convertMapResultToChessResult(MapResult map_result);
-
 ChessTournament createTournament(int tournament_id, int max_games_per_player, const char *tournament_location);
-
 ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player);
-
 void updatePlayersStatistics(Map players, ChessGame game, int first_player_id, int second_player_id,
                              bool was_first_removed, bool was_second_removed);
-
 ChessResult chessAddPlayer(ChessSystem chess, ChessTournament tournament, int player_id);
 
 // mapCreate Functions //
 int compareMapKeys(MapKeyElement key1, MapKeyElement key2);
-
 void freeMapKey(MapKeyElement key);
-
 void freeMapData(MapDataElement data);
-
 MapDataElement copyMapKey(MapKeyElement key);
-
 void freeMapDataTournament(MapDataElement data);
-
 MapDataElement copyMapDataTournament(MapDataElement data);
-
 MapDataElement copyMapDataGame(MapDataElement data);
-
 MapDataElement copyMapDataPlayer(MapDataElement data);
 
 int compareMapKeys(MapKeyElement key1, MapKeyElement key2) {
@@ -69,15 +58,12 @@ int compareMapKeys(MapKeyElement key1, MapKeyElement key2) {
     if (key2 == NULL) return 1;
     return *((int *) key1) - (*(int *) key2);
 }
-
 void freeMapKey(MapKeyElement key) {
     free(key);
 }
-
 void freeMapData(MapDataElement data) {
     free(data);
 }
-
 MapDataElement copyMapKey(MapKeyElement key) {
     if (key == NULL) {
         return NULL;
@@ -90,22 +76,18 @@ MapDataElement copyMapKey(MapKeyElement key) {
     *key_copy = *((int *) key);
     return key_copy;
 }
-
 void freeMapDataTournament(MapDataElement data) {
     freeTournament((ChessTournament) data);
 }
-
 MapDataElement copyMapDataTournament(MapDataElement data) {
     Map game_map = mapCreate(copyMapDataGame, copyMapKey, freeMapData, freeMapKey, compareMapKeys);
     Map players_map = mapCreate(copyMapDataPlayer, copyMapKey, freeMapData, freeMapKey,
                                 compareMapKeys);
     return copyTournament((ChessTournament) data, game_map, players_map);
 }
-
 MapDataElement copyMapDataGame(MapDataElement data) {
     return copyGame((ChessGame) data);
 }
-
 MapDataElement copyMapDataPlayer(MapDataElement data) {
     return copyPlayer((Player) data);
 }
@@ -167,7 +149,6 @@ static bool checkValidGameTime(int time) {
     return false;
 }
 
-
 /**
  * Returns whether or not a game exists in a tournament considering different conditions
  * @param chess - System in which the tournament exists
@@ -225,7 +206,6 @@ static bool checkMaxGamesExceeded(ChessSystem chess, int tournament_id, int firs
         return true;
     return false;
 }
-
 
 // Chess Functions //
 
@@ -308,8 +288,7 @@ ChessTournament createTournament(int tournament_id, int max_games_per_player, co
     return tournament;
 }
 
-ChessResult
-chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_player, const char *tournament_location) {
+ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_player, const char *tournament_location) {
     if (chess == NULL || tournament_location == NULL)
         return CHESS_NULL_ARGUMENT;
     if (!checkValidID(tournament_id))
@@ -345,6 +324,21 @@ chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_playe
     return chess_result;
 }
 
+//bool checkIfResetNeeded(ChessTournament tournament, int player_id){
+//    Player first_player_profile = mapGet(getPlayers(tournament), &player_id);
+//    if (first_player_profile == NULL) {
+//        ChessResult result = chessAddPlayer(chess, tournament, first_player);
+//        if (result != CHESS_SUCCESS) {
+//            return false;
+//        }
+//    } else {
+//        if (isRemoved(first_player_profile)) {
+//            reset_first_player = true;
+//        }
+//    }
+//
+
+
 //TODO:what to do to game when player is removed?
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player, int second_player,
                          Winner winner, int play_time) {
@@ -356,7 +350,6 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         || !checkValidID(second_player)) {
         return CHESS_INVALID_ID;
     }
-
     ChessTournament tournament = mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
     ChessResult result;
     if (tournament == NULL) {
@@ -365,8 +358,8 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     if (hasEnded(tournament)) {
         return CHESS_TOURNAMENT_ENDED;
     }
-
     bool reset_first_player = false, reset_second_player = false;
+
     Player first_player_profile = mapGet(getPlayers(tournament), &first_player);
     if (first_player_profile == NULL) {
         result = chessAddPlayer(chess, tournament, first_player);
@@ -405,7 +398,6 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     if (!checkValidGameTime(play_time)) {
         return CHESS_INVALID_PLAY_TIME;
     }
-
     if (checkMaxGamesExceeded(chess, tournament_id, first_player, second_player, reset_first_player, reset_second_player)) {
         return CHESS_EXCEEDED_GAMES;
     }
@@ -467,7 +459,6 @@ void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id) {
     int second_player_id = getSecondPlayerId(game);
     Player first_player = mapGet(chess->players, &first_player_id);
     Player second_player = mapGet(chess->players, &second_player_id);
-    //TODO: We update the game but not the players? Should reset time played? scores? games played?
     if (first_player == NULL || second_player == NULL) {
         return;
     }
@@ -506,7 +497,7 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
         current_tournament = mapGet(chess->tournaments, (MapKeyElement) iterator);
         freeMapKey(iterator);
         if (current_tournament == NULL) {
-            break;
+            return CHESS_OUT_OF_MEMORY;
         }
         players = getPlayers(current_tournament);
         tournament_profile = mapGet(players, &player_id);
@@ -518,7 +509,7 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
             current_game = mapGet(games, gamesIterator);
             freeMapKey(gamesIterator);
             if (current_game == NULL) {
-                break;
+                return CHESS_OUT_OF_MEMORY;
             }
             updateGameStatistics(chess, current_game, player_id);
         }
