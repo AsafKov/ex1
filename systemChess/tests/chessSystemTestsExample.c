@@ -1231,7 +1231,7 @@ bool testPlayerLevelsAdvanced_maaroof() {
     int player_1 = 1;
     int player_2 = 2;
     ASSERT_TEST(chessAddGame(sys1, 1, player_1, player_2, FIRST_PLAYER, 3) == CHESS_SUCCESS);
-    //ASSERT_TEST(chessRemovePlayer(sys1, player_1) == CHESS_SUCCESS);
+    ASSERT_TEST(chessRemovePlayer(sys1, player_1) == CHESS_SUCCESS);
     FILE* f = fopen("actual_output/test_player_level_advanced.txt", "w");
     ASSERT_TEST(f != NULL);
     ASSERT_TEST(chessSavePlayersLevels(sys1, f) == CHESS_SUCCESS);

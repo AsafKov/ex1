@@ -24,9 +24,9 @@ static bool checkValidLocation(const char *location);
 static bool checkValidMaxGame(int gameLimit);
 static bool checkValidGameTime(int time);
 static bool checkGameExists(ChessSystem chess, ChessTournament tournament, int first_player, int second_player,
-                           bool was_first_removed, bool was_second_removed);
+                            bool was_first_removed, bool was_second_removed);
 static bool checkMaxGamesExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player,
-                          bool ignore_first_player_games, bool ignore_second_player_games);
+                                  bool ignore_first_player_games, bool ignore_second_player_games);
 static bool checkTournamentEnded(ChessSystem chess);
 
 void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id);
@@ -179,7 +179,7 @@ static bool checkValidGameTime(int time) {
  * @return true if game exists, false otherwise
  */
 static bool checkGameExists(ChessSystem chess, ChessTournament tournament, int first_player, int second_player,
-                           bool was_first_removed, bool was_second_removed) {
+                            bool was_first_removed, bool was_second_removed) {
     assert(tournament != NULL && chess != NULL);
     if (was_first_removed || was_second_removed) {
         return false;
@@ -211,7 +211,7 @@ static bool checkGameExists(ChessSystem chess, ChessTournament tournament, int f
  * @return True - one of the players has reached the game limit, False otherwise
  */
 static bool checkMaxGamesExceeded(ChessSystem chess, int tournament_id, int first_player, int second_player,
-                          bool ignore_first_player_games, bool ignore_second_player_games) {
+                                  bool ignore_first_player_games, bool ignore_second_player_games) {
     assert(chess != NULL);
     ChessTournament current_tournament = mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
     if (current_tournament == NULL) {
@@ -322,7 +322,7 @@ chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_playe
         return CHESS_INVALID_MAX_GAMES;
 
     ChessTournament tournament = createTournament(tournament_id, max_games_per_player,
-                                                   tournament_location);
+                                                  tournament_location);
     if (tournament == NULL) {
         freeTournament(tournament);
         return CHESS_OUT_OF_MEMORY;
@@ -344,7 +344,6 @@ chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_playe
     freeTournament(tournament);
     return chess_result;
 }
-
 
 //TODO:what to do to game when player is removed?
 ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player, int second_player,
@@ -379,6 +378,11 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
             reset_first_player = true;
         }
     }
+    Player first_player_profile_in_chess = mapGet(chess->players, &first_player);
+    if (isRemoved(first_player_profile_in_chess)) {
+        reset_first_player = true;
+    }
+
     Player second_player_profile = mapGet(getPlayers(tournament), &second_player);
     if (second_player_profile == NULL) {
         result = chessAddPlayer(chess, tournament, second_player);
@@ -389,6 +393,10 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         if (isRemoved(second_player_profile)) {
             reset_second_player = true;
         }
+    }
+    Player second_player_profile_in_chess = mapGet(chess->players, &second_player);
+    if (isRemoved(second_player_profile_in_chess)) {
+        reset_first_player = true;
     }
 
     if (checkGameExists(chess, tournament, first_player, second_player, reset_first_player, reset_second_player)) {
@@ -696,7 +704,7 @@ double chessCalculateAveragePlayTime(ChessSystem chess, int player_id, ChessResu
     double total_time = getPlayerPlayTime(player);
     double average_time=0;
     if (games_played>0){
-         average_time= total_time / games_played;
+        average_time= total_time / games_played;
     }
     *chess_result = CHESS_SUCCESS;
     return average_time;
@@ -849,8 +857,8 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
             calculateTournamentStatistics(current_tournament, average_game_time, longest_game);
         }
         print_result = fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d\n",
-                getWinnerId(current_tournament), *longest_game, *average_game_time, getLocation(current_tournament),
-                mapGetSize(getGames(current_tournament)), mapGetSize(getPlayers(current_tournament)));
+                               getWinnerId(current_tournament), *longest_game, *average_game_time, getLocation(current_tournament),
+                               mapGetSize(getGames(current_tournament)), mapGetSize(getPlayers(current_tournament)));
         if(print_result < 0){
             fclose(tournament_statistics);
             free(longest_game);
@@ -910,4 +918,3 @@ void calculateTournamentStatistics(ChessTournament tournament, double *average_g
     }
     *average_game_time /= total_games;
 }
-
