@@ -909,5 +909,7 @@ void calculateTournamentStatistics(ChessTournament tournament, double *average_g
         *average_game_time += getDuration(current_game);
         total_games++;
     }
-    *average_game_time /= total_games;
+    if(total_games>0){
+        *average_game_time /= total_games;
+    }
 }
