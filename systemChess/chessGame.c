@@ -43,8 +43,14 @@ int getSecondPlayerId(ChessGame game){
     return game->second_player;
 }
 
-Winner getWinner(ChessGame game){
-    return game->game_winner;
+int getGameWinnerId(ChessGame game){
+    if(game->game_winner == FIRST_PLAYER){
+        return game->first_player;
+    }
+    if(game->game_winner == SECOND_PLAYER){
+        return game->second_player;
+    }
+    return DRAW_ID_NOTATION;
 }
 
 int getDuration(ChessGame game){
