@@ -35,7 +35,6 @@ void switchPlayers(int *first_id, int *second_id, double *first_score, double *s
 void maxSort(int *ids, double *scores, int size);
 void calculateTournamentStatistics(ChessTournament tournament, double *average_game_time, int *longest_game,
                                    ChessResult *result);
-void freeMemoryHelper(FILE *file, int *longest_game, double *average_game_time);
 
 // Chess Functions //
 ChessResult convertMapResultToChessResult(MapResult map_result);
@@ -592,23 +591,18 @@ ChessResult chessEndTournament(ChessSystem chess, int tournament_id) {
     Map players = getPlayers(tournament);
     Player current_player;
     Player current_winner = NULL;
-    int *highest_score = malloc(sizeof(int));
-    if (highest_score == NULL) {
-        return CHESS_OUT_OF_MEMORY;
-    }
-    *highest_score = -1;
+    int highest_score = -1;
     MAP_FOREACH(MapKeyElement, playersIterator, players) {
         current_player = mapGet(players, (MapKeyElement) playersIterator);
         freeMapKey(playersIterator);
         if (current_player == NULL || isRemoved(current_player)) {
             continue;
         }
-        current_winner = compareTournamentScores(current_player, highest_score, current_winner);
+        current_winner = compareTournamentScores(current_player, &highest_score, current_winner);
     }
     if (current_winner != NULL) {
         setTournamentWinner(tournament, getPlayerId(current_winner));
     }
-    free(highest_score);
     return CHESS_SUCCESS;
 }
 
@@ -776,20 +770,20 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
     }
 
     FILE *tournament_statistics = fopen((const char *) path_file, "w");
-    double *average_game_time = malloc(sizeof(double));
-    int *longest_game = malloc(sizeof(int));
+    double average_game_time;
+    int longest_game;
     ChessResult result, *result_pnt = &result;
-    if(tournament_statistics == NULL || average_game_time == NULL || longest_game == NULL){
-        freeMemoryHelper(tournament_statistics, longest_game, average_game_time);
+    if(tournament_statistics == NULL){
+        fclose(tournament_statistics);
         return CHESS_OUT_OF_MEMORY;
     }
 
     if (!hasTournamentEnded(chess, result_pnt)) {
-        freeMemoryHelper(tournament_statistics, longest_game, average_game_time);
+        fclose(tournament_statistics);
         return CHESS_NO_TOURNAMENTS_ENDED;
     }
     if(result != CHESS_SUCCESS){
-        freeMemoryHelper(tournament_statistics, longest_game, average_game_time);
+        fclose(tournament_statistics);
         return CHESS_OUT_OF_MEMORY;
     }
 
@@ -801,38 +795,30 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
         current_tournament = mapGet(tournaments, tournamentsIterator);
         freeMapKey(tournamentsIterator);
         if (current_tournament == NULL){
-            freeMemoryHelper(tournament_statistics, longest_game, average_game_time);
+            fclose(tournament_statistics);
         }
         if (!hasEnded(current_tournament)) {
             continue;
         }
-        *average_game_time = 0;
-        *longest_game = 0;
+        average_game_time = 0;
+        longest_game = 0;
         if (mapGetSize(getGames(current_tournament)) != 0) {
-            calculateTournamentStatistics(current_tournament, average_game_time, longest_game, result_pnt);
+            calculateTournamentStatistics(current_tournament, &average_game_time, &longest_game, result_pnt);
             if(result != CHESS_SUCCESS){
-                freeMemoryHelper(tournament_statistics, longest_game, average_game_time);
+                fclose(tournament_statistics);
                 return CHESS_OUT_OF_MEMORY;
             }
         }
         print_result = fprintf(tournament_statistics, "%d\n%d\n%.2f\n%s\n%d\n%d\n",
-                               getWinnerId(current_tournament), *longest_game, *average_game_time, getLocation(current_tournament),
+                               getWinnerId(current_tournament), longest_game, average_game_time, getLocation(current_tournament),
                                mapGetSize(getGames(current_tournament)), mapGetSize(getPlayers(current_tournament)));
         if(print_result < 0){
-            freeMemoryHelper(tournament_statistics, longest_game, average_game_time);
+            fclose(tournament_statistics);
             return CHESS_SAVE_FAILURE;
         }
     }
     fclose(tournament_statistics);
-    free(longest_game);
-    free(average_game_time);
     return CHESS_SUCCESS;
-}
-
-void freeMemoryHelper(FILE *file, int *longest_game, double *average_game_time){
-    fclose(file);
-    free(longest_game);
-    free(average_game_time);
 }
 
 /**
