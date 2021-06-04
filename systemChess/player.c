@@ -2,7 +2,6 @@
 
 struct player {
     int id;
-    int games_played;
     int wins;
     int draws;
     int losses;
@@ -17,7 +16,6 @@ Player playerCreatePlayer(int id){
         return NULL;
     }
     player->id = id;
-    player->games_played = 0;
     player->wins = 0;
     player->draws = 0;
     player->losses = 0;
@@ -40,7 +38,7 @@ int getPlayerId(Player player){
 }
 
 int getNumOfGames(Player player){
-    return player->games_played;
+    return player->wins + player->losses + player->draws;
 }
 
 int getNumOfWins(Player player){
@@ -75,10 +73,6 @@ void updateLosses(Player player, int losses){
     player->losses += losses;
 }
 
-void updateGamesPlayed(Player player){
-    player->games_played++;
-}
-
 void setIsRemoved(Player player, bool isRemoved){
     player->is_removed = isRemoved;
     if(isRemoved){
@@ -87,7 +81,6 @@ void setIsRemoved(Player player, bool isRemoved){
 }
 
 void resetRemovedPlayerStatistics(Player player){
-    player->games_played=0;
     player->wins=0;
     player->draws=0;
     player->losses=0;
@@ -113,7 +106,6 @@ Player copyPlayer(Player data) {
         return NULL;
     }
     player->id = data->id;
-    player->games_played = data->games_played;
     player->wins = data->wins;
     player->draws = data->draws;
     player->losses = data->losses;
