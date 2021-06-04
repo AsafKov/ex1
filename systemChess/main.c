@@ -344,26 +344,26 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
         return CHESS_INVALID_ID;
     }
     ChessTournament tournament = mapGet(chess->tournaments, (MapKeyElement) &tournament_id);
-    ChessResult result, *result_pnt = &result;
+    ChessResult result;
     if (tournament == NULL) {
         return CHESS_TOURNAMENT_NOT_EXIST;
     }
     if (hasEnded(tournament)) {
         return CHESS_TOURNAMENT_ENDED;
     }
-    bool reset_first_player = false, *reset_first_player_pnt = &reset_first_player;
-    bool reset_second_player = false, *reset_second_player_pnt = &reset_second_player;
-    result = handlePlayerStatus(chess, tournament, first_player, reset_first_player_pnt);
+    bool reset_first_player = false;
+    bool reset_second_player = false;
+    result = handlePlayerStatus(chess, tournament, first_player, &reset_first_player);
     if(result != CHESS_SUCCESS){
         return result;
     }
-    result = handlePlayerStatus(chess, tournament, second_player, reset_second_player_pnt);
+    result = handlePlayerStatus(chess, tournament, second_player, &reset_second_player);
     if(result != CHESS_SUCCESS){
         return result;
     }
 
     if (checkGameExists(tournament, first_player, second_player, reset_first_player, reset_second_player,
-                        result_pnt)) {
+                        &result)) {
         return CHESS_GAME_ALREADY_EXISTS;
     }
     if(result != CHESS_SUCCESS){
@@ -772,13 +772,13 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
     FILE *tournament_statistics = fopen((const char *) path_file, "w");
     double average_game_time;
     int longest_game;
-    ChessResult result, *result_pnt = &result;
+    ChessResult result;
     if(tournament_statistics == NULL){
         fclose(tournament_statistics);
         return CHESS_OUT_OF_MEMORY;
     }
 
-    if (!hasTournamentEnded(chess, result_pnt)) {
+    if (!hasTournamentEnded(chess, &result)) {
         fclose(tournament_statistics);
         return CHESS_NO_TOURNAMENTS_ENDED;
     }
@@ -803,7 +803,7 @@ ChessResult chessSaveTournamentStatistics(ChessSystem chess, char *path_file) {
         average_game_time = 0;
         longest_game = 0;
         if (mapGetSize(getGames(current_tournament)) != 0) {
-            calculateTournamentStatistics(current_tournament, &average_game_time, &longest_game, result_pnt);
+            calculateTournamentStatistics(current_tournament, &average_game_time, &longest_game, &result);
             if(result != CHESS_SUCCESS){
                 fclose(tournament_statistics);
                 return CHESS_OUT_OF_MEMORY;
