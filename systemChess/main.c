@@ -12,7 +12,6 @@
 #define LEVEL_LOSSES_WEIGHT (-10)
 #define TOURNAMENT_SCORE_WINS_WEIGHT 2
 
-//TODO: What to do one memory allocation failure? destroy chess?
 struct chess_system_t {
     Map tournaments;
     Map players;
@@ -29,7 +28,7 @@ static bool checkMaxGamesExceeded(ChessSystem chess, int tournament_id, int firs
                                   bool ignore_first_player_games, bool ignore_second_player_games);
 bool hasTournamentEnded(ChessSystem chess, ChessResult *result);
 
-void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id);
+void updateGameStatistics(ChessSystem chess, ChessGame game, Map players_map, int player_id);
 Player compareTournamentScores(Player current_player, int *current_highest, Player current_winner);
 void switchPlayers(int *first_id, int *second_id, double *first_score, double *second_score);
 void maxSort(int *ids, double *scores, int size);
@@ -40,7 +39,7 @@ void calculateTournamentStatistics(ChessTournament tournament, double *average_g
 ChessResult convertMapResultToChessResult(MapResult map_result);
 ChessTournament createTournament(int tournament_id, int max_games_per_player, const char *tournament_location);
 ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player);
-void updatePlayersStatistics(Map players, ChessGame game, int player_id);
+void updatePlayersStatistics(Map players, ChessGame game, int player_id, bool was_removed);
 ChessResult chessAddPlayer(ChessSystem chess, ChessTournament tournament, int player_id);
 
 
@@ -385,13 +384,14 @@ ChessResult chessAddGame(ChessSystem chess, int tournament_id, int first_player,
     MapResult map_result = mapPut(getGames(tournament), (MapKeyElement) &game_id,
                                   (MapDataElement) game);
     result = convertMapResultToChessResult(map_result);
+
     if (result == CHESS_SUCCESS) {
         //Update tournament profiles
-        updatePlayersStatistics(getPlayers(tournament), game, first_player);
-        updatePlayersStatistics(getPlayers(tournament), game, second_player);
+        updatePlayersStatistics(getPlayers(tournament), game, first_player, reset_first_player);
+        updatePlayersStatistics(getPlayers(tournament), game, second_player, reset_second_player);
         //Update system profiles
-        updatePlayersStatistics(chess->players, game, first_player);
-        updatePlayersStatistics(chess->players, game, second_player);
+        updatePlayersStatistics(chess->players, game, first_player, reset_first_player);
+        updatePlayersStatistics(chess->players, game, second_player, reset_second_player);
     }
     freeMapData(game);
     return result;
@@ -431,53 +431,34 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
  * @param game - game to update
  * @param player_id - removed player id
  */
-void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id) {
+void updateGameStatistics(ChessSystem chess, ChessGame game, Map tournament_players, int removed_player) {
     int first_player_id = getFirstPlayerId(game);
     int second_player_id = getSecondPlayerId(game);
-    int current_winner_id = getGameWinnerId(game);
-    Player first_player = mapGet(chess->players, &first_player_id);
-    Player second_player = mapGet(chess->players, &second_player_id);
-    Player current_winner = NULL, current_loser = NULL;
-    if(current_winner_id == DRAW_ID_NOTATION){
-        if(isRemoved(first_player) && isRemoved(second_player)){
+    int winner_id = getGameWinnerId(game);
+    Player system_profile = NULL, tournament_profile = NULL;
+    if(first_player_id == removed_player){
+        if(winner_id == second_player_id){
             return;
         }
-        if(isRemoved(first_player)){
-            updateDraws(first_player, -1);
-            updateLosses(first_player, 1);
-            updateDraws(second_player, -1);
-            updateWins(second_player, 1);
-            setGameWinner(game, SECOND_PLAYER);
-        } else {
-            updateDraws(second_player, -1);
-            updateLosses(second_player, 1);
-            updateDraws(first_player, -1);
-            updateWins(first_player, 1);
-            setGameWinner(game, FIRST_PLAYER);
-        }
-        return;
-    }
-    if(current_winner_id == first_player_id){
-        current_winner = first_player;
-        current_loser = second_player;
-    } else {
-        current_winner = second_player;
-        current_loser = first_player;
-    }
-    if(isRemoved(first_player)){
+        system_profile = mapGet(chess->players, &second_player_id);
+        tournament_profile = mapGet(tournament_players, &second_player_id);
         setGameWinner(game, SECOND_PLAYER);
     } else {
+        if(winner_id == first_player_id){
+            return;
+        }
+        system_profile = mapGet(chess->players, &first_player_id);
+        tournament_profile = mapGet(tournament_players, &first_player_id);
         setGameWinner(game, FIRST_PLAYER);
     }
-    updateWins(current_winner, -1);
-    updateLosses(current_loser, -1);
-    if(isRemoved(current_winner) && isRemoved(current_loser)){
-        setGameWinner(game, DRAW);
-        updateDraws(current_winner, 1);
-        updateDraws(current_loser, 1);
+    updateWins(system_profile, 1);
+    updateWins(tournament_profile, 1);
+    if(winner_id == DRAW_ID_NOTATION) {
+        updateDraws(system_profile, -1);
+        updateDraws(tournament_profile, -1);
     } else {
-        updateWins(current_loser, 1);
-        updateLosses(current_winner, 1);
+        updateLosses(system_profile, -1);
+        updateLosses(tournament_profile, -1);
     }
 }
 
@@ -493,7 +474,7 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
     ChessGame current_game = NULL;
     ChessTournament current_tournament = NULL;
     Map games = NULL, players = NULL;
-    Player tournament_profile;
+    Player tournament_profile = NULL;
     MAP_FOREACH(MapKeyElement, iterator, chess->tournaments) {
         current_tournament = mapGet(chess->tournaments, (MapKeyElement) iterator);
         freeMapKey(iterator);
@@ -515,7 +496,11 @@ ChessResult chessRemovePlayerEffects(ChessSystem chess, Player player) {
             if (current_game == NULL) {
                 return CHESS_OUT_OF_MEMORY;
             }
-            updateGameStatistics(chess, current_game, player_id);
+            if(getFirstPlayerId(current_game) != player_id && getSecondPlayerId(current_game) != player_id){
+                continue;
+            }
+
+            updateGameStatistics(chess, current_game, players, player_id);
         }
     }
     return CHESS_SUCCESS;
@@ -549,8 +534,11 @@ ChessResult chessRemovePlayer(ChessSystem chess, int player_id) {
  * @param player_id
  * @param was_removed - If true, we need to reset both his removal status the amount of games and time played
  */
-void updatePlayersStatistics(Map players, ChessGame game, int player_id) {
+void updatePlayersStatistics(Map players, ChessGame game, int player_id, bool was_removed) {
     Player player_profile = mapGet(players, (MapKeyElement) &player_id);
+    if(was_removed){
+        resetRemovedPlayerStatistics(player_profile);
+    }
     int winner_id = getGameWinnerId(game);
     if (winner_id == player_id) {
         updateWins(player_profile, 1);
@@ -649,7 +637,8 @@ Player compareTournamentScores(Player current_player, int *current_highest, Play
             return current_player;
         }
         if (getNumOfLosses(current_player) == getNumOfLosses(current_winner)) {
-            if (getPlayerId(current_player) < getPlayerId(current_winner)) {
+            if (getPlayerId(current_player) < getPlayerId(current_winner)
+                || getNumOfWins(current_player) > getNumOfWins(current_winner)) {
                 return current_player;
             }
         }
@@ -700,7 +689,7 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
     }
 
     Map players = chess->players;
-    Player current_player;
+    Player current_player = NULL;
 
     int *ids = malloc(sizeof(int) * (unsigned int) mapGetSize(players));
     double *scores = malloc(sizeof(double) * (unsigned int) mapGetSize(players));
@@ -719,7 +708,7 @@ ChessResult chessSavePlayersLevels(ChessSystem chess, FILE *file) {
         if (current_player == NULL){
             return CHESS_OUT_OF_MEMORY;
         }
-        if (isRemoved(current_player)) {
+        if (isRemoved(current_player) || getNumOfGames(current_player) == 0) {
             continue;
         }
         level = calculatePlayerLevel(current_player);

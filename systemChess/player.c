@@ -75,9 +75,6 @@ void updateLosses(Player player, int losses){
 
 void setIsRemoved(Player player, bool isRemoved){
     player->is_removed = isRemoved;
-    if(isRemoved){
-        resetRemovedPlayerStatistics(player);
-    }
 }
 
 void resetRemovedPlayerStatistics(Player player){
