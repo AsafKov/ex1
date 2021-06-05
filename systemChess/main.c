@@ -434,24 +434,50 @@ ChessResult chessRemoveTournament(ChessSystem chess, int tournament_id) {
 void updateGameStatistics(ChessSystem chess, ChessGame game, int player_id) {
     int first_player_id = getFirstPlayerId(game);
     int second_player_id = getSecondPlayerId(game);
+    int current_winner_id = getGameWinnerId(game);
     Player first_player = mapGet(chess->players, &first_player_id);
     Player second_player = mapGet(chess->players, &second_player_id);
-    if (first_player == NULL || second_player == NULL) {
-        return;
-    }
-    if (first_player_id == player_id) {
-        if (isRemoved(second_player)) {
-            setGameWinner(game, DRAW);
-        } else {
-            setGameWinner(game, SECOND_PLAYER);
+    Player current_winner = NULL, current_loser = NULL;
+    if(current_winner_id == DRAW_ID_NOTATION){
+        if(isRemoved(first_player) && isRemoved(second_player)){
+            return;
         }
-    }
-    if (second_player_id == player_id) {
-        if (isRemoved(first_player)) {
-            setGameWinner(game, DRAW);
+        if(isRemoved(first_player)){
+            updateDraws(first_player, -1);
+            updateLosses(first_player, 1);
+            updateDraws(second_player, -1);
+            updateWins(second_player, 1);
+            setGameWinner(game, SECOND_PLAYER);
         } else {
+            updateDraws(second_player, -1);
+            updateLosses(second_player, 1);
+            updateDraws(first_player, -1);
+            updateWins(first_player, 1);
             setGameWinner(game, FIRST_PLAYER);
         }
+        return;
+    }
+    if(current_winner_id == first_player_id){
+        current_winner = first_player;
+        current_loser = second_player;
+    } else {
+        current_winner = second_player;
+        current_loser = first_player;
+    }
+    if(isRemoved(first_player)){
+        setGameWinner(game, SECOND_PLAYER);
+    } else {
+        setGameWinner(game, FIRST_PLAYER);
+    }
+    updateWins(current_winner, -1);
+    updateLosses(current_loser, -1);
+    if(isRemoved(current_winner) && isRemoved(current_loser)){
+        setGameWinner(game, DRAW);
+        updateDraws(current_winner, 1);
+        updateDraws(current_loser, 1);
+    } else {
+        updateWins(current_loser, 1);
+        updateLosses(current_winner, 1);
     }
 }
 
