@@ -16,7 +16,8 @@ int getWinnerId(ChessTournament tournament);
 int getMaxGamesPerPlayer(ChessTournament tournament);
 bool hasEnded(ChessTournament tournament);
 int getLastGameId(ChessTournament tournament);
-
+int getNumberOfPlayers(ChessTournament tournament);
+void updatePlayersCounter(ChessTournament tournament);
 void setHasEnded(ChessTournament tournament, bool hasEnded);
 void setGamesMap(ChessTournament tournament, Map games);
 void setPlayersMap(ChessTournament tournament, Map players);

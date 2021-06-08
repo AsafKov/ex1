@@ -6,6 +6,7 @@ struct chess_tournament_t {
     int id;
     const char *tournament_location;
     int tournament_winner;
+    int players_counter;
     int max_games_per_player;
     bool has_ended;
     int last_game_id;
@@ -34,6 +35,7 @@ ChessTournament createChessTournament(int tournament_id, int max_games_per_playe
     tournament->max_games_per_player = max_games_per_player;
     tournament->has_ended = false;
     tournament->last_game_id = 0;
+    tournament->players_counter = 0;
 
     return tournament;
 }
@@ -68,6 +70,11 @@ void setHasEnded(ChessTournament tournament, bool hasEnded){
 void setGamesMap(ChessTournament tournament, Map games){
     tournament->games = games;
 }
+
+void updatePlayersCounter(ChessTournament tournament){
+    tournament->players_counter++;
+}
+
 void setPlayersMap(ChessTournament tournament, Map players){
     tournament->players = players;
 }
@@ -76,6 +83,9 @@ void setTournamentWinner(ChessTournament tournament, int winnerId){
     tournament->tournament_winner = winnerId;
 }
 
+int getNumberOfPlayers(ChessTournament tournament){
+    return tournament->players_counter;
+}
 
 void freeTournament(ChessTournament data) {
     if (data == NULL) {
@@ -104,6 +114,7 @@ ChessTournament copyTournament(ChessTournament data, Map game_map, Map players_m
     tournament->max_games_per_player = data->max_games_per_player;
     tournament->has_ended = data->has_ended;
     tournament->last_game_id = data->last_game_id;
+    tournament->players_counter = data->players_counter;
 
     Map games = data->games;
     if (games != NULL) {

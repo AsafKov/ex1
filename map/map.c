@@ -55,7 +55,7 @@ MapResult mapClear(Map map){
         return MAP_NULL_ARGUMENT;
     }
     map->iterator = NULL;
-    Node dummy;
+    Node dummy = NULL;
     while(map->elements != NULL){
         map->freeMapKeyFunction(getKey(map->elements));
         map->freeMapDataFunction(getData((map->elements)));

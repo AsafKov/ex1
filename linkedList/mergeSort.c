@@ -9,7 +9,6 @@ typedef struct node_t {
 
 typedef enum { SUCCESS=0,
     MEMORY_ERROR,
-    EMPTY_LIST,
     UNSORTED_LIST,
     NULL_ARGUMENT,
 } ErrorCode;
@@ -18,7 +17,7 @@ int getListLength(Node list);
 bool isListSorted(Node list);
 Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code);
 bool createNextLink(Node node);
-bool insertSpare(Node merged_out, Node list, int *length);
+bool insertSpare(Node merged_out, Node list, const int *length);
 void freeList(Node list);
 ErrorCode mergeLists(Node merged_out, Node list1, Node list2, int *list1_length, int *list2_length);
 
@@ -70,25 +69,9 @@ Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code){
         *error_code = NULL_ARGUMENT;
         return merged_out;
     }
-    int *list1_length = malloc(sizeof(int));
-    if(list1 == NULL){
-        *error_code = EMPTY_LIST;
-        return merged_out;
-    }
-    int *list2_length = malloc(sizeof(int));
-    if(list2 == NULL){
-        *error_code = EMPTY_LIST;
-        return merged_out;
-    }
 
-    *list1_length = getListLength(list1);
-    *list2_length = getListLength(list2);
-
-    // Stop process if either list is empty
-    if(*list1_length == 0 || *list2_length == 0){
-        *error_code = EMPTY_LIST;
-        return merged_out;
-    }
+    int list1_length = getListLength(list1);
+    int list2_length = getListLength(list2);
 
     // Stop process if either list is unsorted
     if(!isListSorted(list1) || isListSorted(list2)){
@@ -96,22 +79,14 @@ Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code){
         return merged_out;
     }
 
-    merged_out = malloc(sizeof(*list1) + sizeof(*list2));
+    merged_out = malloc(sizeof(struct node_t));
     if(merged_out == NULL) {
         *error_code = MEMORY_ERROR;
         return merged_out;
     }
 
-    *error_code = mergeLists(merged_out, list1, list2, list1_length, list2_length);
-    if(error_code != SUCCESS){
-        freeList(merged_out);
-        return NULL;
-    }
-
-    // Since we don't know which list was fully inserted, we'll try to add the spares from both
-    if(!insertSpare(merged_out, list1, list1_length) || !insertSpare(merged_out, list2, list2_length)){
-        // Memory allocation failure has occurred while trying to finish the merging
-        *error_code = MEMORY_ERROR;
+    *error_code = mergeLists(merged_out, list1, list2, &list1_length, &list2_length);
+    if(*error_code != SUCCESS){
         freeList(merged_out);
         return NULL;
     }
@@ -122,20 +97,27 @@ Node mergeSortedLists(Node list1, Node list2, ErrorCode* error_code){
 ErrorCode mergeLists(Node merged_out, Node list1, Node list2, int *list1_length, int *list2_length){
     // Set a new pointer to the start of the list for iteration
     Node current_node = merged_out;
+    Node dummy_list1 = list1, dummy_list2 = list2;
     while(*list1_length != 0 && *list2_length != 0){
-        if(list1 -> x < list2 -> x){
-            current_node -> x = list1 -> x;
-            list1 = list1->next;
-            *list1_length--;
+        if(dummy_list1 -> x < dummy_list2 -> x){
+            current_node -> x = dummy_list1 -> x;
+            dummy_list1 = dummy_list1->next;
+            *list1_length -= 1;
         } else {
-            current_node -> x = list2 -> x;
-            list2 = list2->next;
-            *list2_length--;
+            current_node -> x = dummy_list2 -> x;
+            dummy_list2 = dummy_list2->next;
+            *list2_length -= 1;
         }
         if(!createNextLink(current_node)) {
             return MEMORY_ERROR;
         }
         current_node = current_node->next;
+    }
+
+    // Since we don't know which list was fully inserted, we'll try to add the spares from both
+    if(!insertSpare(merged_out, dummy_list1, list1_length) || !insertSpare(merged_out, dummy_list2, list2_length)){
+        // Memory allocation failure has occurred while trying to finish the merging
+        return MEMORY_ERROR;
     }
     return SUCCESS;
 }
@@ -147,10 +129,10 @@ ErrorCode mergeLists(Node merged_out, Node list1, Node list2, int *list1_length,
  * @param length - Amount of nodes left to insert
  * @return true if successful, false if failed due to memory error
  */
-bool insertSpare(Node merged_out, Node list, int *length){
+bool insertSpare(Node merged_out, Node list, const int *length){
     while(*length != 0){
         merged_out->x = list->x;
-        *length--;
+        length -= 1;
         if(*length == 0)
             return true;
         if(!createNextLink(merged_out)) {
@@ -184,7 +166,7 @@ bool createNextLink(Node node){
     if(node == NULL){
         return false;
     }
-    node->next = malloc(sizeof(*(node->next)));
+    node->next = malloc(sizeof(struct node_t));
     if(node->next == NULL)
         return false;
     return true;

@@ -6,6 +6,8 @@
 // MAKE SURE TO HAVE THESE FILES AS WELL AS map.c IN THE CURRENT FOLDER AND THAT YOUR COMPILE THE TESTER WITH YOUR map.c
 #include "test_utilities.h"
 
+#define REPEAT 1000
+
 MapDataElement copyDataString(MapDataElement element)
 {
     if (!element)
@@ -316,7 +318,7 @@ char *randString(int length)
     {
         length = 1;
     }
-    random_string = malloc(sizeof(char) * (length + 1));
+    random_string = malloc(sizeof(char) * ((unsigned int) (length + 1)));
     if (random_string == NULL)
     {
         return NULL;
@@ -324,7 +326,7 @@ char *randString(int length)
     short key = 0;
     for (int n = 0; n < length; n++)
     {
-        key = rand() % string_len;
+        key = (short) ((unsigned int) rand() % string_len);
         random_string[n] = string[key];
     }
 
@@ -337,12 +339,12 @@ bool doomsDay()
 {
     printf(">doomsDay function:\n");
     Map map = mapCreate(copyDataString, copyKeyString, freeDataString, freeKeyString, compareKeyStrings);
-    ;
+
     const int repeat = 10000;
     const int length = 7;
-    char *arr[repeat];
+    char *arr[REPEAT];
     static int my_seed = 25011984;
-    srand(time(NULL) * length + ++my_seed);
+    srand((unsigned int) (time(NULL) * length + ++my_seed));
     char *str;
     for (int i = 0; i < repeat; i++)
     {
@@ -361,7 +363,7 @@ bool doomsDay()
     return true;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     printf("Start Map Tests:\n");
     testMapPutGet();
