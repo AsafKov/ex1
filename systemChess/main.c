@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <assert.h>
 #include "headers/chessGame.h"
 #include "headers/chessTournament.h"
 #include "headers/player.h"
@@ -281,16 +280,21 @@ ChessTournament createTournament(int tournament_id, int max_games_per_player, co
 
 ChessResult chessAddTournament(ChessSystem chess, int tournament_id, int max_games_per_player,
                                const char *tournament_location) {
-    if (chess == NULL || tournament_location == NULL)
+    if (chess == NULL || tournament_location == NULL){
         return CHESS_NULL_ARGUMENT;
-    if (!checkValidID(tournament_id))
+    }
+    if (!checkValidID(tournament_id)){
         return CHESS_INVALID_ID;
-    if (mapContains(chess->tournaments, (MapKeyElement) &tournament_id))
+    }
+    if (mapContains(chess->tournaments, (MapKeyElement) &tournament_id)){
         return CHESS_TOURNAMENT_ALREADY_EXISTS;
-    if (!checkValidLocation(tournament_location))
+    }
+    if (!checkValidLocation(tournament_location)){
         return CHESS_INVALID_LOCATION;
-    if (!checkValidMaxGame(max_games_per_player))
+    }
+    if (!checkValidMaxGame(max_games_per_player)){
         return CHESS_INVALID_MAX_GAMES;
+    }
 
     ChessTournament tournament = createTournament(tournament_id, max_games_per_player,
                                                   tournament_location);

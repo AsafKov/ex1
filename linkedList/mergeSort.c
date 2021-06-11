@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 typedef struct node_t {
     int x;
@@ -20,41 +19,6 @@ bool createNextLink(Node node);
 bool insertSpare(Node merged_out, Node list, const int *length);
 void freeList(Node list);
 ErrorCode mergeLists(Node merged_out, Node list1, Node list2, int *list1_length, int *list2_length);
-
-int main(){
-    Node list1 = malloc(sizeof(*list1));
-    if(!list1) return 0;
-    Node list2 = malloc(sizeof(*list2));
-    if(!list2) return 0;
-
-    Node current_node_1 = list1;
-    Node current_node_2 = list2;
-    for(int i=0; i<5; i++){
-        current_node_1 -> x = i;
-        if(!createNextLink(current_node_1)) return 0;
-        current_node_1 = current_node_1->next;
-    }
-    for(int i=7; i<17; i++){
-        current_node_2 -> x = i;
-        current_node_2 -> next = malloc(sizeof(*(current_node_2->next)));
-        if(!createNextLink(current_node_2)) return 0;
-        current_node_2 = current_node_2->next;
-    }
-    ErrorCode *result = malloc(sizeof(ErrorCode));
-    current_node_1 = list1;
-    current_node_2 = list2;
-    Node merged_out = mergeSortedLists(current_node_1, current_node_2, result);
-    if(result == SUCCESS){
-        while(merged_out != NULL){
-            printf("%d ", merged_out->x);
-            merged_out = merged_out->next;
-        }
-    }
-    freeList(list1);
-    freeList(list2);
-    freeList(merged_out);
-
-}
 
 /**
  * Merging two linked lists of sorted number into one sorted linked list
